@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Heart, Sparkles, Music } from 'lucide-react';
+import { startBackgroundMusic } from '../utils/romanticAudio.js';
 
-const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
+const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   id: i,
   x: Math.random() * 100,
   y: Math.random() * 100,
@@ -9,26 +12,41 @@ const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
   duration: 3 + Math.random() * 4,
 }));
 
-const HEARTS = ['♡', '♥', '💕', '✦', '⋆'];
+const HEARTS = ['♡', '♥', '💕', '✦', '⋆', '✨'];
 
 export default function WelcomeScreen({ onDone }) {
+  const handleEnter = () => {
+    // Start La Distancia softly upon entering
+    startBackgroundMusic('laDistancia');
+    onDone();
+  };
+
+  // Fallback timer if user doesn't click
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onDone();
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+      onClick={handleEnter}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
       style={{ background: 'linear-gradient(135deg, #0a0a0f 0%, #0f0a14 40%, #14091a 70%, #0a0a0f 100%)' }}
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.03 }}
-      transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+      transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
     >
-      {/* Ambient glows */}
+      {/* Ambient background glows */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
           className="absolute rounded-full"
           style={{
             top: '10%', left: '15%',
             width: 500, height: 500,
-            background: 'radial-gradient(circle, rgba(136,11,58,0.2) 0%, transparent 65%)',
+            background: 'radial-gradient(circle, rgba(136,11,58,0.25) 0%, transparent 65%)',
           }}
           animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -38,7 +56,7 @@ export default function WelcomeScreen({ onDone }) {
           style={{
             bottom: '10%', right: '10%',
             width: 400, height: 400,
-            background: 'radial-gradient(circle, rgba(104,48,224,0.18) 0%, transparent 65%)',
+            background: 'radial-gradient(circle, rgba(104,48,224,0.2) 0%, transparent 65%)',
           }}
           animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
           transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
@@ -64,13 +82,13 @@ export default function WelcomeScreen({ onDone }) {
         />
       ))}
 
-      {/* Floating heart chars */}
+      {/* Floating heart symbols */}
       {HEARTS.map((h, i) => (
         <motion.span
           key={i}
           className="absolute text-lg select-none pointer-events-none"
           style={{
-            left: `${15 + i * 16}%`,
+            left: `${12 + i * 14}%`,
             color: i % 2 === 0 ? 'rgba(200,35,96,0.35)' : 'rgba(144,96,255,0.3)',
           }}
           animate={{ y: [-40, 40], opacity: [0, 0.6, 0] }}
@@ -80,7 +98,7 @@ export default function WelcomeScreen({ onDone }) {
 
       {/* Main content */}
       <div className="relative z-10 text-center px-8 flex flex-col items-center gap-6">
-        {/* Heart icon */}
+        {/* Glowing Heart Icon */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -139,26 +157,31 @@ export default function WelcomeScreen({ onDone }) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.85, duration: 0.8 }}
         >
-          Cargando cada momento, cada sonrisa y cada "te amo"…
+          Cargando cada momento, risa y recuerdo juntos…
         </motion.p>
 
-        {/* Loading dots */}
-        <motion.div
-          className="flex gap-2 items-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.0 }}
+        {/* Enter Button with sound icon */}
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEnter();
+          }}
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1, duration: 0.6 }}
+          whileHover={{ scale: 1.06, boxShadow: '0 0 35px rgba(200,35,96,0.5)' }}
+          whileTap={{ scale: 0.95 }}
+          className="px-8 py-3.5 rounded-full font-semibold text-sm text-white flex items-center gap-2.5 shadow-2xl transition-all border border-white/20 mt-2"
+          style={{ background: 'linear-gradient(135deg, #880b3a, #c82360, #9060ff)' }}
         >
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: 'rgba(200,35,96,0.7)' }}
-              animate={{ scale: [1, 1.6, 1], opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: 'easeInOut' }}
-            />
-          ))}
-        </motion.div>
+          <Music size={15} className="text-pink-300 animate-pulse" />
+          <span>Entrar a Nuestra Historia</span>
+          <Heart size={14} className="fill-white text-white" />
+        </motion.button>
+
+        <p className="text-[11px] text-white/40 tracking-wider">
+          Toca en cualquier parte para comenzar con música de fondo 🎶
+        </p>
       </div>
     </motion.div>
   );

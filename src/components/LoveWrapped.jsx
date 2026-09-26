@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Heart, Pause, Play, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { COUPLE_PHOTOS } from '../data/photos.js';
+import { switchTrack } from '../utils/romanticAudio.js';
 
 const SLIDE_DURATION = 5500; // ms per slide
 
@@ -50,6 +51,12 @@ function buildSlides(analytics) {
     weeklyData = [],
     hourlyData = [],
     peakHour: givenPeakHour,
+    // ── New advanced metrics ──
+    loveStreak = { maxDays: 0, startDate: null, endDate: null },
+    goodnightStats = { avgHour: 22, sleepsFirst: '', sleepFirstCount: {} },
+    telepathyCount = 0,
+    messageLengthStats = {},
+    topCoupleVocab = [],
   } = analytics;
 
   const p1 = participants[0] || 'Uno';
@@ -574,6 +581,176 @@ function buildSlides(analytics) {
       ),
     },
 
+    // ── Slide A: Love Streak ──────────────────────────────────────────────────
+    {
+      id: 'love-streak',
+      bg: 'from-[#3a0418] via-[#200620] to-[#0a0a0f]',
+      content: (
+        <div className="flex flex-col items-center justify-center h-full text-center px-8">
+          <motion.div
+            initial={{ scale: 0, rotate: -20 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 180, delay: 0.2 }}
+            className="text-6xl mb-4"
+          >
+            🔥
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-xs uppercase tracking-widest text-muted-soft mb-2"
+          >
+            Racha de amor inquebrantable
+          </motion.p>
+          <motion.div
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 130, delay: 0.4 }}
+            className="font-display text-8xl font-bold gradient-text leading-none mb-1"
+          >
+            {(loveStreak.maxDays || 0).toLocaleString('es-CO')}
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="font-display italic text-2xl text-rose-300 mb-5"
+          >
+            días sin un solo silencio
+          </motion.p>
+          {loveStreak.startDate && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="bg-white/[0.07] border border-rose-500/20 rounded-2xl px-5 py-3 max-w-xs"
+            >
+              <p className="text-white/80 text-xs leading-relaxed">
+                Desde <span className="text-rose-300 font-semibold">{loveStreak.startDate}</span>
+                {' '}hasta{' '}
+                <span className="text-rose-300 font-semibold">{loveStreak.endDate}</span>
+              </p>
+              <p className="text-amber-300 text-xs mt-1 font-semibold">
+                Un récord de presencia y amor constante 🏆
+              </p>
+            </motion.div>
+          )}
+        </div>
+      ),
+      onEnter: () => {
+        confetti({
+          particleCount: 60,
+          spread: 80,
+          origin: { y: 0.65 },
+          colors: ['#f04080', '#c82360', '#ffd966', '#ff80ad'],
+          scalar: 1,
+        });
+      },
+    },
+
+    // ── Slide B: Telepathy + Goodnight ritual ────────────────────────────────
+    {
+      id: 'telepathy-night',
+      bg: 'from-[#08042e] via-[#160424] to-[#0a0a0f]',
+      content: (
+        <div className="flex flex-col items-center justify-center h-full text-center px-6 gap-5">
+          {/* Telepathy */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="w-full max-w-xs bg-white/[0.06] border border-emerald-500/20 rounded-2xl p-5"
+          >
+            <div className="text-4xl mb-2">🧠</div>
+            <p className="text-xs uppercase tracking-widest text-emerald-400/80 mb-1">
+              Índice de Telepatía
+            </p>
+            <div className="font-display text-5xl font-bold text-white leading-none mb-1">
+              {(telepathyCount || 0).toLocaleString('es-CO')}
+            </div>
+            <p className="text-sm text-white/60 font-light">
+              veces que se escribieron al mismo tiempo ✨
+            </p>
+          </motion.div>
+
+          {/* Goodnight */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="w-full max-w-xs bg-white/[0.06] border border-violet-500/20 rounded-2xl p-5"
+          >
+            <div className="text-4xl mb-2">🌙</div>
+            <p className="text-xs uppercase tracking-widest text-violet-400/80 mb-1">
+              Ritual de buenas noches
+            </p>
+            <div className="font-display text-4xl font-bold text-white leading-none mb-1">
+              {String(goodnightStats.avgHour ?? 22).padStart(2, '0')}:00
+            </div>
+            <p className="text-sm text-white/60 font-light">
+              la hora promedio del último mensaje del día 💜
+            </p>
+            {goodnightStats.sleepsFirst && (
+              <p className="text-xs text-violet-300 mt-2 font-semibold">
+                {goodnightStats.sleepsFirst} se duerme primero 😴
+              </p>
+            )}
+          </motion.div>
+        </div>
+      ),
+    },
+
+    // ── Slide C: Couple Vocabulary ────────────────────────────────────────────
+    {
+      id: 'vocab',
+      bg: 'from-[#180428] via-[#1a0520] to-[#0a0a0f]',
+      content: (
+        <div className="flex flex-col items-center justify-center h-full text-center px-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.2 }}
+            className="text-5xl mb-3"
+          >
+            📖
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-xs uppercase tracking-widest text-violet-400/80 mb-1"
+          >
+            Su idioma secreto
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45 }}
+            className="font-display italic text-lg text-white/80 mb-5"
+          >
+            Las palabras que solo existen entre ustedes
+          </motion.p>
+          <div className="flex flex-wrap justify-center gap-2 max-w-xs">
+            {(topCoupleVocab || []).slice(0, 12).map((item, i) => (
+              <motion.span
+                key={item.word}
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 + i * 0.06, type: 'spring', stiffness: 220 }}
+                className="bg-white/[0.08] border border-white/[0.12] rounded-full px-3 py-1 text-xs text-white/90"
+              >
+                {item.word} <span className="text-violet-400 font-mono">×{item.total}</span>
+              </motion.span>
+            ))}
+          </div>
+          {topCoupleVocab.length === 0 && (
+            <p className="text-white/40 text-sm mt-4">Vocabulario analizándose…</p>
+          )}
+        </div>
+      ),
+    },
+
     // Slide 9: Closing
     {
       id: 'closing',
@@ -641,6 +818,14 @@ export default function LoveWrapped({ analytics, onClose }) {
   const [current, setCurrent] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const timerRef = useRef(null);
+
+  // Switch to special song "Tengo Ganas" during Wrapped, restore "La Distancia" on close
+  useEffect(() => {
+    switchTrack('tengoGanas');
+    return () => {
+      switchTrack('laDistancia');
+    };
+  }, []);
 
   const goTo = useCallback((index) => {
     const clamped = Math.max(0, Math.min(index, slides.length - 1));

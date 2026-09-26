@@ -486,6 +486,367 @@ export function computeAnalytics(messages) {
       dateStr: m.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
     }));
 
+  // ─── 1. LOVE STREAK: Max consecutive days both sent messages ─────────────────
+  const activeDaySet = new Set(Object.keys(dailyMap));
+  let maxStreak = 0;
+  let currentStreak = 0;
+  let streakStartDate = null;
+  let bestStreakStart = null;
+  let bestStreakEnd = null;
+
+  if (activeDaySet.size > 0) {
+    const sortedDays = [...activeDaySet].sort();
+    let prev = null;
+    for (const dayStr of sortedDays) {
+      if (!prev) {
+        currentStreak = 1;
+        streakStartDate = dayStr;
+      } else {
+        const prevD = new Date(prev);
+        const currD = new Date(dayStr);
+        const diffDays = Math.round((currD - prevD) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          currentStreak++;
+        } else {
+          if (currentStreak > maxStreak) {
+            maxStreak = currentStreak;
+            bestStreakStart = streakStartDate;
+            bestStreakEnd = prev;
+          }
+          currentStreak = 1;
+          streakStartDate = dayStr;
+        }
+      }
+      prev = dayStr;
+    }
+    if (currentStreak > maxStreak) {
+      maxStreak = currentStreak;
+      bestStreakStart = streakStartDate;
+      bestStreakEnd = prev;
+    }
+  }
+
+  const loveStreak = {
+    maxDays: maxStreak,
+    startDate: bestStreakStart,
+    endDate: bestStreakEnd,
+  };
+
+  // ─── 2. CANONICAL GOODNIGHT HOUR: Avg hour of last daily message & who sleeps first ──
+  const lastMsgPerDay = {};
+  for (const msg of sortedMsgs) {
+    if (!participants.includes(msg.author)) continue;
+    const dayKey = msg.date.toISOString().slice(0, 10);
+    lastMsgPerDay[dayKey] = msg;
+  }
+
+  const goodnightHours = Object.values(lastMsgPerDay).map((m) => m.date.getHours());
+  const goodnightHourAvg = goodnightHours.length
+    ? Math.round(goodnightHours.reduce((a, b) => a + b, 0) / goodnightHours.length)
+    : 22;
+
+  const sleepFirstCount = { [p1]: 0, [p2]: 0 };
+  for (const msg of Object.values(lastMsgPerDay)) {
+    if (sleepFirstCount[msg.author] !== undefined) sleepFirstCount[msg.author]++;
+  }
+  // The person with fewer last messages is the one who usually "initiates sleep" (sends last msg less)
+  const sleepsFirst = sleepFirstCount[p1] <= sleepFirstCount[p2] ? p1 : p2;
+  const goodnightStats = { avgHour: goodnightHourAvg, sleepsFirst, sleepFirstCount };
+
+  // ─── 3. TELEPATHY INDEX: Messages sent within 60s of each other ──────────────
+  let telepathyCount = 0;
+  for (let i = 1; i < sortedMsgs.length; i++) {
+    const curr = sortedMsgs[i];
+    const prev = sortedMsgs[i - 1];
+    if (!participants.includes(curr.author) || !participants.includes(prev.author)) continue;
+    if (curr.author !== prev.author) continue; // must be same-author consecutive? No — we want cross-author
+    // Recheck: telepathy = different authors, near-simultaneous
+  }
+  // Correct approach: sort by time, check consecutive pairs from different authors < 60s
+  telepathyCount = 0;
+  for (let i = 1; i < sortedMsgs.length; i++) {
+    const curr = sortedMsgs[i];
+    const prev = sortedMsgs[i - 1];
+    if (!participants.includes(curr.author) || !participants.includes(prev.author)) continue;
+    if (curr.author === prev.author) continue;
+    const diffSec = (curr.date - prev.date) / 1000;
+    if (diffSec >= 0 && diffSec <= 60) {
+      telepathyCount++;
+    }
+  }
+
+  // ─── 4. MESSAGE LENGTH METRICS: Testaments vs. Direct ────────────────────────
+  const textMsgs = sortedMsgs.filter(
+    (m) => participants.includes(m.author) && !/omitid/i.test(m.text) && m.text.length > 0
+  );
+  const charsByAuthor = { [p1]: [], [p2]: [] };
+  for (const msg of textMsgs) {
+    if (charsByAuthor[msg.author]) charsByAuthor[msg.author].push(msg.text.length);
+  }
+
+  const avgChars = (arr) => (arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0);
+  const avgCharsP1 = avgChars(charsByAuthor[p1]);
+  const avgCharsP2 = avgChars(charsByAuthor[p2]);
+  const testament = avgCharsP1 >= avgCharsP2 ? p1 : p2;
+
+  const messageLengthStats = {
+    [p1]: { avg: avgCharsP1, total: charsByAuthor[p1].length },
+    [p2]: { avg: avgCharsP2, total: charsByAuthor[p2].length },
+    testamentWriter: testament,
+  };
+
+  // ─── 5. COUPLE-EXCLUSIVE VOCABULARY (words used ≥5x that aren't in stopwords) ─
+  const coupleVocab = [];
+  const allWords = {};
+
+  for (const p of participants) {
+    const freq = stats[p]?.wordFreq || {};
+    for (const [word, count] of Object.entries(freq)) {
+      if (!allWords[word]) allWords[word] = { [p1]: 0, [p2]: 0 };
+      allWords[word][p] = count;
+    }
+  }
+
+  // Couple-exclusive: short distinctive words (≤10 chars) used ≥3 times total, not in stopwords
+  const EXTRA_STOP = new Set([
+    'bien', 'hola', 'jaja', 'jeje', 'xd', 'para', 'este', 'esta', 'todo',
+    'eso', 'esa', 'ahh', 'aah', 'entonces', 'bueno', 'pues', 'igual', 'igual',
+    'ahora', 'aquí', 'acá', 'cosa', 'dia', 'hoy', 'más', 'mucho', 'saber',
+  ]);
+
+  for (const [word, counts] of Object.entries(allWords)) {
+    const total = (counts[p1] || 0) + (counts[p2] || 0);
+    if (total >= 3 && word.length <= 12 && !EXTRA_STOP.has(word)) {
+      coupleVocab.push({ word, total, [p1]: counts[p1] || 0, [p2]: counts[p2] || 0 });
+    }
+  }
+  // Sort by total, take top 20 most distinctive (high total but short — signals nickname/slang)
+  coupleVocab.sort((a, b) => b.total - a.total);
+  const topCoupleVocab = coupleVocab.slice(0, 20);
+
+  // ─── 6. GOOD MORNING RITUAL: First message per day & who wakes up first ───
+  const firstMsgPerDay = {};
+  for (const msg of sortedMsgs) {
+    if (!participants.includes(msg.author)) continue;
+    const dayKey = msg.date.toISOString().slice(0, 10);
+    if (!firstMsgPerDay[dayKey]) {
+      firstMsgPerDay[dayKey] = msg;
+    }
+  }
+
+  const morningHours = Object.values(firstMsgPerDay).map((m) => m.date.getHours() + m.date.getMinutes() / 60);
+  const avgMorningDec = morningHours.length
+    ? morningHours.reduce((a, b) => a + b, 0) / morningHours.length
+    : 8.5;
+  const avgMorningHour = Math.floor(avgMorningDec);
+  const avgMorningMin = Math.round((avgMorningDec - avgMorningHour) * 60);
+  const morningLabel = `${String(avgMorningHour).padStart(2, '0')}:${String(avgMorningMin).padStart(2, '0')}`;
+
+  const morningFirstCount = { [p1]: 0, [p2]: 0 };
+  for (const msg of Object.values(firstMsgPerDay)) {
+    if (morningFirstCount[msg.author] !== undefined) morningFirstCount[msg.author]++;
+  }
+  const wakesUpFirst = morningFirstCount[p1] >= morningFirstCount[p2] ? p1 : p2;
+  const goodMorningStats = {
+    avgHour: avgMorningHour,
+    avgMin: avgMorningMin,
+    label: morningLabel,
+    wakesUpFirst,
+    morningFirstCount,
+    totalDays: Object.keys(firstMsgPerDay).length,
+  };
+
+  // ─── 7. UNIVERSO DE CORAZONES: All hearts sent throughout the relationship ─
+  const HEART_REGEX = /(?:[\u2764\uFE0F]|\uD83D[\uDC93-\uDC9F]|\uD83E[\uDD0D\uDD0E\uDE75\uDE77]|❤️|💖|💕|💜|💗|💓|💞|💘|🤍|🖤|🧡|💛|💚|💙|🤎|💝|💌)/gu;
+  const heartCounts = { [p1]: 0, [p2]: 0, total: 0, byType: {} };
+  for (const msg of sortedMsgs) {
+    if (!participants.includes(msg.author)) continue;
+    const matches = msg.text.match(HEART_REGEX) || [];
+    for (const h of matches) {
+      heartCounts[msg.author] = (heartCounts[msg.author] || 0) + 1;
+      heartCounts.total++;
+      if (!heartCounts.byType[h]) heartCounts.byType[h] = { [p1]: 0, [p2]: 0, total: 0 };
+      heartCounts.byType[h][msg.author] = (heartCounts.byType[h][msg.author] || 0) + 1;
+      heartCounts.byType[h].total++;
+    }
+  }
+  const p1FavoriteHeart = Object.entries(heartCounts.byType).sort((a, b) => (b[1][p1] || 0) - (a[1][p1] || 0))[0]?.[0] || '❤️';
+  const p2FavoriteHeart = Object.entries(heartCounts.byType).sort((a, b) => (b[1][p2] || 0) - (a[1][p2] || 0))[0]?.[0] || '💜';
+  const heartStats = {
+    total: heartCounts.total,
+    [p1]: heartCounts[p1] || 0,
+    [p2]: heartCounts[p2] || 0,
+    p1FavoriteHeart,
+    p2FavoriteHeart,
+    topHearts: Object.entries(heartCounts.byType)
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 6)
+      .map(([emoji, data]) => ({ emoji, ...data })),
+  };
+
+  // ─── 8. VELOCIDAD DE INTERÉS: Respuestas rápidas (<3 min) ───────────────────
+  const p1Responses = responseTimes[p1] || [];
+  const p2Responses = responseTimes[p2] || [];
+  const p1Fast = p1Responses.filter((t) => t <= 3).length;
+  const p2Fast = p2Responses.filter((t) => t <= 3).length;
+  const p1AvgResp = avgResponse(p1Responses) || 0;
+  const p2AvgResp = avgResponse(p2Responses) || 0;
+  const fastestResponder = p1AvgResp <= p2AvgResp ? p1 : p2;
+  const responseVelocity = {
+    [p1]: { avgMinutes: p1AvgResp, fastCount: p1Fast, totalResponses: p1Responses.length },
+    [p2]: { avgMinutes: p2AvgResp, fastCount: p2Fast, totalResponses: p2Responses.length },
+    fastestResponder,
+  };
+
+  // ─── 9. DÍA RÉCORD HISTÓRICO: El día más intenso de amor ────────────────────
+  let recordDayWords = 0;
+  if (busiestDay) {
+    const dayMsgs = sortedMsgs.filter(
+      (m) => m.date.toISOString().slice(0, 10) === busiestDay && participants.includes(m.author)
+    );
+    for (const m of dayMsgs) {
+      recordDayWords += m.text.split(/\s+/).filter(Boolean).length;
+    }
+  }
+  const recordDayDate = busiestDay ? new Date(busiestDay + 'T12:00:00') : null;
+  const recordDayFormatted = recordDayDate
+    ? recordDayDate.toLocaleDateString('es-CO', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : 'Día especial';
+  const bookPagesEquivalent = Math.max(1, Math.round(recordDayWords / 250));
+  const recordDayStats = {
+    date: busiestDay,
+    formattedDate: recordDayFormatted,
+    messagesCount: busiestCount,
+    wordsCount: recordDayWords,
+    bookPages: bookPagesEquivalent,
+  };
+
+  // ─── 10. APODOS Y TERNURA: Desglose de apodos cariñosos ───────────────────────
+  const PET_NAMES = [
+    { key: 'amor', regex: /\b(amor|amorcito|amorcitu|amorsote|amorsito)\b/gi, label: 'Amor' },
+    { key: 'vida', regex: /\b(mi vida|vidita|vida mía)\b/gi, label: 'Mi Vida' },
+    { key: 'bebe', regex: /\b(beb[eé]|bb|bebesito|bebesita)\b/gi, label: 'Bebé' },
+    { key: 'cielo', regex: /\b(cielo|cielito)\b/gi, label: 'Cielo' },
+    { key: 'hermosa', regex: /\b(hermosa|preciosa|bella|princesa|reina)\b/gi, label: 'Hermosa/Reina' },
+    { key: 'lindo', regex: /\b(lindo|rey|guapo|pr[ií]ncipe)\b/gi, label: 'Lindo/Rey' },
+    { key: 'corazon', regex: /\b(coraz[oó]n|corazoncito)\b/gi, label: 'Corazón' },
+    { key: 'teamo', regex: /\b(te amo|te re amo|te amo tanto)\b/gi, label: 'Te amo' },
+  ];
+  const petNameCounts = PET_NAMES.map((pn) => {
+    let c1 = 0, c2 = 0;
+    for (const msg of sortedMsgs) {
+      if (!participants.includes(msg.author)) continue;
+      const m = msg.text.match(pn.regex) || [];
+      if (msg.author === p1) c1 += m.length;
+      else if (msg.author === p2) c2 += m.length;
+    }
+    return { label: pn.label, [p1]: c1, [p2]: c2, total: c1 + c2 };
+  })
+    .filter((x) => x.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const totalAffectionWords = petNameCounts.reduce((acc, curr) => acc + curr.total, 0);
+
+  // ─── 11. PROMESAS Y FUTURO: Palabras de trascendencia ───────────────────────
+  const FUTURE_PATTERNS = /\b(siempre|para siempre|toda la vida|nuestro futuro|cuando nos casemos|nuestra casa|hijos|viajar juntos|prometo|te prometo)\b/gi;
+  let futureCountP1 = 0;
+  let futureCountP2 = 0;
+  for (const msg of sortedMsgs) {
+    if (!participants.includes(msg.author)) continue;
+    const m = msg.text.match(FUTURE_PATTERNS) || [];
+    if (msg.author === p1) futureCountP1 += m.length;
+    else if (msg.author === p2) futureCountP2 += m.length;
+  }
+  const futurePromisesStats = {
+    total: futureCountP1 + futureCountP2,
+    [p1]: futureCountP1,
+    [p2]: futureCountP2,
+  };
+
+  // ─── 12. RADAR DE CHISMES & EXCLUSIVAS ("¿Quién cuenta más chismes?") ───────
+  const CHISME_PATTERNS = /\b(no sabes|no te imaginas|imag[ií]nate|te tengo que contar|tengo un chisme|el chisme|marica|mk|adivina|viste que|supiste|omg|literal|no te lo vas a creer|te cuento|te enteraste)\b/gi;
+  let chismeP1 = 0;
+  let chismeP2 = 0;
+  for (const msg of sortedMsgs) {
+    if (!participants.includes(msg.author)) continue;
+    const m = msg.text.match(CHISME_PATTERNS) || [];
+    if (msg.author === p1) chismeP1 += m.length;
+    else if (msg.author === p2) chismeP2 += m.length;
+  }
+  const chismeStats = {
+    total: chismeP1 + chismeP2,
+    [p1]: chismeP1,
+    [p2]: chismeP2,
+    topChismoso: chismeP1 >= chismeP2 ? p1 : p2,
+  };
+
+  // ─── 13. DETECTOR DE ANTOJOS 24/7 ("¿Quién tiene más hambre?") ──────────────
+  const CRAVING_PATTERNS = /\b(hambre|tengo hambre|antojo|antojada|antojado|pizza|hamburguesa|sushi|helado|postre|chocolate|dulce|comidita|pidamos|domicilio|rappi|salgamos a comer|quiero comer|vamos por algo|antojitos)\b/gi;
+  let foodP1 = 0;
+  let foodP2 = 0;
+  for (const msg of sortedMsgs) {
+    if (!participants.includes(msg.author)) continue;
+    const m = msg.text.match(CRAVING_PATTERNS) || [];
+    if (msg.author === p1) foodP1 += m.length;
+    else if (msg.author === p2) foodP2 += m.length;
+  }
+  const cravingStats = {
+    total: foodP1 + foodP2,
+    [p1]: foodP1,
+    [p2]: foodP2,
+    topFoodie: foodP1 >= foodP2 ? p1 : p2,
+  };
+
+  // ─── 14. EL BUCLE DE PREGUNTAS CLÁSICAS ────────────────────────────────────
+  const QUESTION_TYPES = [
+    { label: '¿Dónde estás / vas?', regex: /\b(d[oó]nde est[aá]s|ya saliste|por d[oó]nde vas|d[oó]nde andas|ya llegaste)\b/gi },
+    { label: '¿Qué haces?', regex: /\b(qu[eé] haces|qu[eé] hac[ií]as|en qu[eé] andas|qu[eé] haciendo)\b/gi },
+    { label: '¿Ya comiste?', regex: /\b(ya comiste|ya almorzaste|ya desayunaste|ya cenaste|qu[eé] almorzaste)\b/gi },
+    { label: '¿Cómo te fue?', regex: /\b(c[oó]mo te fue|c[oó]mo va todo|qu[eé] tal tu d[ií]a|c[oó]mo est[aá]s)\b/gi },
+    { label: '¿Me amas / extrañas?', regex: /\b(me amas|cu[aá]nto me amas|me quieres|me extra[nñ]as|te hago falta)\b/gi },
+  ];
+  const questionLoops = QUESTION_TYPES.map((q) => {
+    let c1 = 0, c2 = 0;
+    for (const msg of sortedMsgs) {
+      if (!participants.includes(msg.author)) continue;
+      const m = msg.text.match(q.regex) || [];
+      if (msg.author === p1) c1 += m.length;
+      else if (msg.author === p2) c2 += m.length;
+    }
+    return { label: q.label, [p1]: c1, [p2]: c2, total: c1 + c2 };
+  }).filter((q) => q.total > 0).sort((a, b) => b.total - a.total);
+
+  // ─── 15. BATALLA DE AUDIOS (PODCASTS) ──────────────────────────────────────
+  const audiosP1 = mediaBreakdown[p1]?.audios || 0;
+  const audiosP2 = mediaBreakdown[p2]?.audios || 0;
+  const estMinutesP1 = Math.round(audiosP1 * 0.7);
+  const estMinutesP2 = Math.round(audiosP2 * 0.7);
+  const audioPodcastStats = {
+    totalAudios: audiosP1 + audiosP2,
+    [p1]: { audios: audiosP1, estMinutes: estMinutesP1 },
+    [p2]: { audios: audiosP2, estMinutes: estMinutesP2 },
+    podcastKing: audiosP1 >= audiosP2 ? p1 : p2,
+    totalMinutes: estMinutesP1 + estMinutesP2,
+    spotifyEpisodes: Math.round((estMinutesP1 + estMinutesP2) / 20) || 1,
+  };
+
+  // ─── 16. SIMULADOR DE COMPATIBILIDAD CÓSMICA ───────────────────────────────
+  const cosmicCompatibility = {
+    globalScore: 99.8,
+    traits: [
+      { name: 'Sincronía de Chismes & Charlas', score: 99 },
+      { name: 'Afinidad de Antojos & Comida', score: 100 },
+      { name: 'Paciencia en Audios & Mensajes', score: 98 },
+      { name: 'Telepatía & Presencia Diaria', score: 99 },
+      { name: 'Química de Cursilería & Cariño', score: 100 },
+    ],
+    verdict: 'Almas Gemelas Cósmicas — Condenados a amarse toda la vida ✨💍',
+  };
+
   return {
     participants,
     firstDate,
@@ -521,5 +882,23 @@ export function computeAnalytics(messages) {
     peakHour,
     msgPool,
     dailyMap,
+    // ─── Advanced Secret Analytics ────────────────────────────────────────────
+    loveStreak,
+    goodnightStats,
+    goodMorningStats,
+    telepathyCount,
+    messageLengthStats,
+    topCoupleVocab,
+    heartStats,
+    responseVelocity,
+    recordDayStats,
+    petNameCounts,
+    totalAffectionWords,
+    futurePromisesStats,
+    chismeStats,
+    cravingStats,
+    questionLoops,
+    audioPodcastStats,
+    cosmicCompatibility,
   };
 }

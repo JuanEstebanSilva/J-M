@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback, Component } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import rawChat from './data/_chat.txt?raw';
 import { parseWhatsApp, computeAnalytics } from './utils/whatsappParser.js';
@@ -6,8 +6,9 @@ import { parseWhatsApp, computeAnalytics } from './utils/whatsappParser.js';
 import WelcomeScreen      from './components/WelcomeScreen.jsx';
 import Navbar             from './components/Navbar.jsx';
 import HeroSection        from './components/HeroSection.jsx';
-import MomentsGallery     from './components/MomentsGallery.jsx';
+import PhotoTimeline      from './components/PhotoTimeline.jsx';
 import DeepAnalyticsSection from './components/DeepAnalyticsSection.jsx';
+import AdvancedStats        from './components/AdvancedStats.jsx';
 import CoupleStats        from './components/CoupleStats.jsx';
 import ActivityCharts     from './components/ActivityCharts.jsx';
 import VocabularySection   from './components/VocabularySection.jsx';
@@ -15,6 +16,7 @@ import MemoriesSection    from './components/MemoriesSection.jsx';
 import LoveWrapped        from './components/LoveWrapped.jsx';
 import FloatingParticles  from './components/FloatingParticles.jsx';
 import AudioPlayerButton  from './components/AudioPlayerButton.jsx';
+import { attachAutoUnlock, startBackgroundMusic } from './utils/romanticAudio.js';
 
 // ─── Parse & compute analytics once (memoized) ───────────────────────────────
 function useAnalytics() {
@@ -47,6 +49,31 @@ function ErrorScreen({ message }) {
   );
 }
 
+// ─── Error Boundary ──────────────────────────────────────────────────────────
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('Section Error:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 my-6 rounded-3xl bg-rose-950/40 border border-rose-500/30 text-center">
+          <p className="text-rose-300 font-bold text-sm">Sección en mantenimiento</p>
+          <p className="text-[11px] text-white/50 font-mono mt-1">{this.state.error?.message}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 function Dashboard({ analytics, onOpenWrapped }) {
   const [p1 = 'Juanes', p2 = 'Pau'] = analytics.participants;
@@ -75,27 +102,45 @@ function Dashboard({ analytics, onOpenWrapped }) {
         <HeroSection analytics={analytics} onOpenWrapped={onOpenWrapped} />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <MomentsGallery />
+          <ErrorBoundary>
+            <PhotoTimeline />
+          </ErrorBoundary>
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
-          <DeepAnalyticsSection analytics={analytics} />
+          <ErrorBoundary>
+            <DeepAnalyticsSection analytics={analytics} />
+          </ErrorBoundary>
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
-          <CoupleStats      analytics={analytics} />
+          <ErrorBoundary>
+            <AdvancedStats analytics={analytics} />
+          </ErrorBoundary>
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
-          <ActivityCharts   analytics={analytics} />
+          <ErrorBoundary>
+            <CoupleStats analytics={analytics} />
+          </ErrorBoundary>
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
-          <VocabularySection analytics={analytics} />
+          <ErrorBoundary>
+            <ActivityCharts analytics={analytics} />
+          </ErrorBoundary>
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
-          <MemoriesSection  analytics={analytics} />
+          <ErrorBoundary>
+            <VocabularySection analytics={analytics} />
+          </ErrorBoundary>
+
+          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+
+          <ErrorBoundary>
+            <MemoriesSection analytics={analytics} />
+          </ErrorBoundary>
         </div>
 
         {/* Footer */}
@@ -132,9 +177,13 @@ export default function App() {
   const [showWrapped, setShowWrapped] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowWelcome(false), 2800);
-    return () => clearTimeout(timer);
+    attachAutoUnlock();
   }, []);
+
+  const handleWelcomeDone = () => {
+    startBackgroundMusic('laDistancia');
+    setShowWelcome(false);
+  };
 
   if (error) return <ErrorScreen message={error} />;
 
@@ -142,16 +191,18 @@ export default function App() {
     <div style={{ background: '#08080d', minHeight: '100vh' }}>
       <AnimatePresence mode="wait">
         {showWelcome && (
-          <WelcomeScreen key="welcome" onDone={() => setShowWelcome(false)} />
+          <WelcomeScreen key="welcome" onDone={handleWelcomeDone} />
         )}
       </AnimatePresence>
 
       {/* Dashboard rendered after welcome transition */}
       {analytics && !showWelcome && (
-        <Dashboard
-          analytics={analytics}
-          onOpenWrapped={() => setShowWrapped(true)}
-        />
+        <ErrorBoundary>
+          <Dashboard
+            analytics={analytics}
+            onOpenWrapped={() => setShowWrapped(true)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Love Wrapped Stories Modal */}
