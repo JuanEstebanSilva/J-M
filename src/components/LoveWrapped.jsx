@@ -1,28 +1,28 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Heart, Pause, Play } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Heart, Pause, Play, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-const SLIDE_DURATION = 5000; // ms per slide
+const SLIDE_DURATION = 5500; // ms per slide
 
 function ProgressBar({ total, current, isPlaying, duration }) {
   return (
-    <div className="flex gap-1 w-full">
+    <div className="flex gap-1.5 w-full">
       {Array.from({ length: total }).map((_, i) => (
-        <div key={i} className="flex-1 h-1 rounded-full bg-white/30 overflow-hidden">
+        <div key={i} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
           {i < current && (
-            <div className="h-full w-full bg-white/80 rounded-full" />
+            <div className="h-full w-full bg-gradient-to-r from-wine-400 to-rose-400 rounded-full" />
           )}
           {i === current && isPlaying && (
             <motion.div
-              className="h-full bg-white/80 rounded-full"
+              className="h-full bg-gradient-to-r from-wine-400 to-rose-400 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: '100%' }}
               transition={{ duration: duration / 1000, ease: 'linear' }}
             />
           )}
           {i === current && !isPlaying && (
-            <div className="h-full bg-white/60 rounded-full" style={{ width: '50%' }} />
+            <div className="h-full bg-wine-400 rounded-full" style={{ width: '50%' }} />
           )}
         </div>
       ))}
@@ -32,126 +32,164 @@ function ProgressBar({ total, current, isPlaying, duration }) {
 
 function buildSlides(analytics) {
   const {
-    participants, totalMessages, totalWords, daysTogether,
-    perAuthor, busiestDay, loveKeywords, dayOfWeekActivity,
-    hourlyActivity, monthlyTimeline,
+    participants = [],
+    totalMessages = 0,
+    totalWords = 0,
+    daysTotal = 0,
+    stats = {},
+    busiestDay = null,
+    busiestCount = 0,
+    loveWordsTotals = {},
+    weeklyData = [],
+    hourlyData = [],
+    peakHour: givenPeakHour,
   } = analytics;
 
-  const p1 = participants[0];
-  const p2 = participants[1];
-  const p1Data = perAuthor[p1] || {};
-  const p2Data = perAuthor[p2] || {};
+  const p1 = participants[0] || 'Uno';
+  const p2 = participants[1] || 'El otro';
+  const s1 = stats[p1] || { messages: 0, words: 0, emojiTop: [] };
+  const s2 = stats[p2] || { messages: 0, words: 0, emojiTop: [] };
 
-  const biggestsender = p1Data.messageCount >= p2Data.messageCount ? p1 : p2;
-  const peakHour = hourlyActivity.indexOf(Math.max(...hourlyActivity));
-  const peakDay = [...dayOfWeekActivity].sort((a, b) => b.count - a.count)[0]?.day;
-  const topLove = Object.entries(loveKeywords).sort(([, a], [, b]) => b - a)[0];
-  const peakMonth = monthlyTimeline.sort((a, b) => b.total - a.total)[0];
-  const p1TopEmoji = p1Data.topEmojis?.[0]?.key || '❤️';
-  const p2TopEmoji = p2Data.topEmojis?.[0]?.key || '🥰';
-  const busiestDate = busiestDay?.date?.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-  const years = Math.floor(daysTogether / 365);
+  const p1Count = s1.messages || 0;
+  const p2Count = s2.messages || 0;
+  const totalCount = p1Count + p2Count || 1;
+  const p1Pct = Math.round((p1Count / totalCount) * 100);
+  const p2Pct = 100 - p1Pct;
+
+  const biggestSender = p1Count >= p2Count ? p1 : p2;
+  const peakHour = givenPeakHour ?? 21;
+  const peakDayObj = [...(weeklyData || [])].sort((a, b) => b.count - a.count)[0];
+  const peakDay = peakDayObj?.day || 'Domingo';
+
+  // Love words sorted
+  const sortedLove = Object.entries(loveWordsTotals || {})
+    .filter(([, data]) => (data?.total || 0) > 0)
+    .sort(([, a], [, b]) => b.total - a.total);
+  const topLove = sortedLove[0] || ['Amor', { total: 0 }];
+
+  // Busiest date formatted
+  let busiestDateStr = 'Un día especial';
+  if (busiestDay) {
+    const parts = busiestDay.split('-');
+    if (parts.length === 3) {
+      const bDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      busiestDateStr = bDate.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }
+
+  const years = Math.floor(daysTotal / 365);
 
   return [
     // Slide 1: Opening
     {
       id: 'opening',
-      bg: 'from-blossom-plum via-blossom-burgundy to-blossom-wine',
+      bg: 'from-[#2a0418] via-[#150520] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-            className="text-8xl mb-6"
+            className="text-7xl mb-6 select-none"
+            style={{ filter: 'drop-shadow(0 0 24px rgba(200,35,96,0.6))' }}
           >
             ❤️
           </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="section-label tracking-[0.3em] text-xs mb-3 text-rose-300"
+          >
+            ✦ NUESTRO LOVE WRAPPED ✦
+          </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="font-display text-5xl text-white font-bold mb-4 leading-tight"
+            className="font-display text-4xl text-white font-bold mb-2 leading-tight"
           >
-            Nuestro año
+            Nuestra Historia
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-display italic text-3xl text-white/80 mb-6"
+            className="font-display italic text-2xl text-wine-400 mb-8"
           >
-            en mensajes
+            en cada mensaje
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex items-center gap-3 text-white/60 font-sans text-lg"
+            className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"
           >
-            <span>{p1}</span>
-            <span className="text-blossom-rose">🌸</span>
-            <span>{p2}</span>
+            <span className="font-medium text-white/90 text-sm">{p1}</span>
+            <span className="text-rose-500 animate-pulse text-xs">♥</span>
+            <span className="font-medium text-white/90 text-sm">{p2}</span>
           </motion.div>
         </div>
       ),
     },
+
     // Slide 2: Days together
     {
       id: 'days',
-      bg: 'from-blossom-wine via-blossom-mauve to-blossom-rose',
+      bg: 'from-[#350820] via-[#1c0628] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="font-sans text-white/70 text-sm uppercase tracking-widest mb-4"
+            className="text-xs uppercase tracking-widest text-muted-soft mb-4"
           >
-            Llevan juntos
+            Llevan escribiendo su amor
           </motion.p>
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 150, delay: 0.3 }}
-            className="font-display text-9xl font-bold text-white leading-none mb-2"
+            className="font-display text-8xl font-bold gradient-text leading-none mb-2"
           >
-            {daysTogether.toLocaleString('es-ES')}
+            {daysTotal.toLocaleString('es-CO')}
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="font-display italic text-4xl text-white/80 mb-6"
+            className="font-display italic text-3xl text-rose-300 mb-6"
           >
-            días 🌹
+            días juntos 🌹
           </motion.p>
           {years > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
-              className="bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-3"
+              className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-2.5 border border-white/10"
             >
-              <p className="font-sans text-white text-base">
-                {years} año{years > 1 ? 's' : ''} de historia juntos
+              <p className="text-white/90 text-sm">
+                Más de <span className="font-bold text-gold-400">{years} año{years > 1 ? 's' : ''}</span> caminando de la mano
               </p>
             </motion.div>
           )}
         </div>
       ),
     },
+
     // Slide 3: Total messages
     {
       id: 'messages',
-      bg: 'from-blossom-burgundy to-blossom-plum',
+      bg: 'from-[#18002e] via-[#200424] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-6xl mb-6"
+            className="text-6xl mb-5"
           >
             💌
           </motion.div>
@@ -159,169 +197,177 @@ function buildSlides(analytics) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="font-sans text-white/70 text-sm uppercase tracking-widest mb-2"
+            className="text-xs uppercase tracking-widest text-muted-soft mb-2"
           >
-            Se enviaron
+            Se han dedicado
           </motion.p>
           <motion.div
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 120, delay: 0.4 }}
-            className="font-display text-8xl font-bold text-white leading-none mb-2"
+            className="font-display text-7xl font-bold text-white leading-none mb-2"
           >
-            {totalMessages.toLocaleString('es-ES')}
+            {totalMessages.toLocaleString('es-CO')}
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-display italic text-3xl text-blossom-rose mb-6"
+            className="font-display italic text-2xl text-wine-400 mb-6"
           >
-            mensajes
+            mensajes compartidos
           </motion.p>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="font-sans text-white/50 text-base"
+            className="text-white/60 text-sm max-w-xs"
           >
-            y {totalWords.toLocaleString('es-ES')} palabras de amor
+            Y más de <span className="text-violet-300 font-mono font-medium">{totalWords.toLocaleString('es-CO')}</span> palabras escritas con el corazón
           </motion.p>
         </div>
       ),
     },
+
     // Slide 4: Who talks more
     {
       id: 'talker',
-      bg: 'from-blossom-mauve via-blossom-rose to-blossom-peach',
+      bg: 'from-[#26051d] via-[#140824] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="font-sans text-white/70 text-sm uppercase tracking-widest mb-8"
+            className="text-xs uppercase tracking-widest text-muted-soft mb-8"
           >
-            El más hablador
+            ¿Quién escribe más?
           </motion.p>
 
-          <div className="flex items-end justify-center gap-8 mb-8 w-full max-w-xs">
-            {participants.map((p, i) => {
-              const count = perAuthor[p]?.messageCount || 0;
-              const max = Math.max(p1Data.messageCount, p2Data.messageCount);
-              const heightPct = 30 + Math.round((count / max) * 70);
-              const isWinner = p === biggestsender;
-              return (
-                <motion.div
-                  key={p}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: `${heightPct * 1.5}px`, opacity: 1 }}
-                  transition={{ delay: 0.3 + i * 0.15, duration: 0.8, ease: 'easeOut' }}
-                  className="flex flex-col items-center justify-end"
-                >
-                  {isWinner && (
-                    <span className="text-3xl mb-2">👑</span>
-                  )}
-                  <div
-                    className={`w-20 rounded-t-2xl flex items-end justify-center pb-3 ${
-                      isWinner
-                        ? 'bg-white/40 border-2 border-white/60'
-                        : 'bg-white/20'
-                    }`}
-                    style={{ height: `${heightPct * 1.5}px` }}
-                  >
-                    <div className="text-center">
-                      <p className="font-display text-2xl font-bold text-white">
-                        {perAuthor[p]?.percentage}%
-                      </p>
-                      <p className="font-sans text-white/80 text-xs">{p}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+          <div className="flex items-end justify-center gap-6 mb-8 w-full max-w-xs">
+            {/* P1 */}
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: `${p1Pct * 1.8}px`, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
+              className="flex-1 flex flex-col items-center justify-end"
+            >
+              {p1 === biggestSender && <span className="text-2xl mb-1">👑</span>}
+              <div
+                className="w-full rounded-2xl flex flex-col items-center justify-end p-3"
+                style={{
+                  height: `${Math.max(p1Pct * 1.8, 60)}px`,
+                  background: 'linear-gradient(180deg, rgba(200,35,96,0.6) 0%, rgba(136,11,58,0.8) 100%)',
+                  border: '1px solid rgba(200,35,96,0.4)',
+                }}
+              >
+                <span className="font-display text-2xl font-bold text-white">{p1Pct}%</span>
+                <span className="text-xs text-white/80 truncate max-w-full">{p1}</span>
+              </div>
+            </motion.div>
+
+            {/* P2 */}
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: `${p2Pct * 1.8}px`, opacity: 1 }}
+              transition={{ delay: 0.45, duration: 0.8, ease: 'easeOut' }}
+              className="flex-1 flex flex-col items-center justify-end"
+            >
+              {p2 === biggestSender && <span className="text-2xl mb-1">👑</span>}
+              <div
+                className="w-full rounded-2xl flex flex-col items-center justify-end p-3"
+                style={{
+                  height: `${Math.max(p2Pct * 1.8, 60)}px`,
+                  background: 'linear-gradient(180deg, rgba(144,96,255,0.6) 0%, rgba(104,48,224,0.8) 100%)',
+                  border: '1px solid rgba(144,96,255,0.4)',
+                }}
+              >
+                <span className="font-display text-2xl font-bold text-white">{p2Pct}%</span>
+                <span className="text-xs text-white/80 truncate max-w-full">{p2}</span>
+              </div>
+            </motion.div>
           </div>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="font-display italic text-white text-2xl"
+            className="font-display italic text-white/90 text-xl"
           >
-            {biggestsender} llena la conversación 💬
+            {biggestSender} lleva la delantera en mensajes 💬
           </motion.p>
         </div>
       ),
     },
+
     // Slide 5: Love keywords
     {
       id: 'love-words',
-      bg: 'from-blossom-plum via-blossom-wine to-blossom-burgundy',
+      bg: 'from-[#380620] via-[#1a041e] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-            className="text-7xl mb-6"
+            className="text-6xl mb-4"
           >
-            {topLove?.[0] || '❤️'}
+            💖
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="font-sans text-white/70 text-sm uppercase tracking-widest mb-2"
+            className="text-xs uppercase tracking-widest text-muted-soft mb-2"
           >
-            Dijeron
+            Palabra de amor favorita
           </motion.p>
           <motion.div
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.4 }}
-            className="font-display text-8xl font-bold text-white mb-2"
+            className="font-display text-7xl font-bold text-white mb-1"
           >
-            {(topLove?.[1] || 0).toLocaleString('es-ES')}
+            {(topLove[1]?.total || 0).toLocaleString('es-CO')}
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-display italic text-2xl text-blossom-rose mb-8"
+            className="font-display italic text-2xl text-rose-300 mb-6"
           >
-            veces "{topLove?.[0]}"
+            veces "{topLove[0]}"
           </motion.p>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-wrap justify-center gap-3"
+            className="flex flex-wrap justify-center gap-2 max-w-xs"
           >
-            {Object.entries(loveKeywords)
-              .filter(([, v]) => v > 0)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 6)
-              .map(([label, count]) => (
-                <span key={label} className="bg-white/20 rounded-full px-4 py-2 font-sans text-white text-sm">
-                  "{label}" × {count}
-                </span>
-              ))
-            }
+            {sortedLove.slice(0, 6).map(([label, data]) => (
+              <span
+                key={label}
+                className="bg-white/10 border border-white/10 rounded-full px-3 py-1 text-xs text-white/90"
+              >
+                "{label}" <span className="text-wine-400 font-mono">×{data.total}</span>
+              </span>
+            ))}
           </motion.div>
         </div>
       ),
     },
+
     // Slide 6: Peak time
     {
       id: 'peak-time',
-      bg: 'from-blossom-burgundy via-blossom-plum to-[#1a0a14]',
+      bg: 'from-[#100624] via-[#180320] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
             initial={{ rotate: -30, opacity: 0 }}
             animate={{ rotate: 0, opacity: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="text-7xl mb-6"
+            className="text-6xl mb-4"
           >
             {peakHour >= 22 || peakHour < 6 ? '🌙' : peakHour < 12 ? '🌅' : peakHour < 18 ? '☀️' : '🌆'}
           </motion.div>
@@ -329,15 +375,15 @@ function buildSlides(analytics) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="font-sans text-white/70 text-sm uppercase tracking-widest mb-4"
+            className="text-xs uppercase tracking-widest text-muted-soft mb-3"
           >
-            Su hora favorita
+            Su hora mágica de conexión
           </motion.p>
           <motion.div
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 150, delay: 0.4 }}
-            className="font-display text-8xl font-bold text-white mb-2"
+            className="font-display text-7xl font-bold text-white mb-2"
           >
             {String(peakHour).padStart(2, '0')}:00
           </motion.div>
@@ -345,32 +391,33 @@ function buildSlides(analytics) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-display italic text-2xl text-blossom-rose mb-8"
+            className="font-display italic text-2xl text-violet-300 mb-6"
           >
-            El pico nocturno 💕
+            El momento de mayor complicidad ✨
           </motion.p>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="font-sans text-white/60 text-sm"
+            className="text-white/60 text-xs"
           >
-            Los {peakDay} son su día más activo de la semana
+            Y los días <span className="text-white/90 font-medium">{peakDay}</span> son cuando más hablan de la semana
           </motion.p>
         </div>
       ),
     },
+
     // Slide 7: Record day
     {
       id: 'record-day',
-      bg: 'from-blossom-apricot via-blossom-peach to-blossom-rose',
+      bg: 'from-[#2c1200] via-[#24081c] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-7xl mb-6"
+            className="text-6xl mb-4"
           >
             🏆
           </motion.div>
@@ -378,62 +425,64 @@ function buildSlides(analytics) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="font-sans text-white/80 text-sm uppercase tracking-widest mb-2"
+            className="text-xs uppercase tracking-widest text-gold-400 mb-2"
           >
-            Su día récord
+            Su récord absoluto
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="font-display text-2xl text-white font-semibold mb-4 capitalize"
+            className="text-sm text-white/80 font-medium mb-3 capitalize"
           >
-            {busiestDate}
+            {busiestDateStr}
           </motion.p>
           <motion.div
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 120, delay: 0.5 }}
-            className="font-display text-8xl font-bold text-white mb-2"
+            className="font-display text-7xl font-bold text-gold-300 mb-2"
           >
-            {busiestDay?.count?.toLocaleString('es-ES')}
+            {busiestCount?.toLocaleString('es-CO')}
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
-            className="font-display italic text-2xl text-white/80"
+            className="font-display italic text-xl text-white/90"
           >
-            mensajes en un solo día 🔥
+            mensajes en tan solo 24 horas 🔥
           </motion.p>
         </div>
       ),
     },
+
     // Slide 8: Top emojis
     {
       id: 'emojis',
-      bg: 'from-blossom-wine to-blossom-plum',
+      bg: 'from-[#20072e] via-[#180420] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="font-sans text-white/70 text-sm uppercase tracking-widest mb-8"
+            className="text-xs uppercase tracking-widest text-muted-soft mb-6"
           >
-            Sus emojis favoritos
+            Sus emojis predilectos
           </motion.p>
-          <div className="flex flex-col gap-8 w-full max-w-xs">
+          <div className="flex flex-col gap-6 w-full max-w-xs">
             {participants.map((p, pi) => (
               <motion.div
                 key={p}
-                initial={{ opacity: 0, x: pi === 0 ? -30 : 30 }}
+                initial={{ opacity: 0, x: pi === 0 ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + pi * 0.2 }}
+                className="bg-white/5 border border-white/10 rounded-2xl p-3"
               >
-                <p className="font-sans text-white/60 text-xs mb-3">{p}</p>
+                <p className="text-xs text-muted-soft mb-2 font-medium">{p}</p>
                 <div className="flex justify-center gap-3">
-                  {(perAuthor[p]?.topEmojis || []).slice(0, 5).map(({ key: emoji, count }, i) => (
+                  {(stats[p]?.emojiTop || []).slice(0, 5).map(([emoji, count], i) => (
                     <motion.div
                       key={emoji}
                       initial={{ scale: 0 }}
@@ -441,8 +490,8 @@ function buildSlides(analytics) {
                       transition={{ delay: 0.4 + pi * 0.2 + i * 0.08, type: 'spring' }}
                       className="flex flex-col items-center"
                     >
-                      <span className="text-4xl mb-1">{emoji}</span>
-                      <span className="font-mono text-xs text-white/50">{count}</span>
+                      <span className="text-2xl mb-0.5">{emoji}</span>
+                      <span className="font-mono text-[10px] text-white/40">{count}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -452,45 +501,47 @@ function buildSlides(analytics) {
         </div>
       ),
     },
+
     // Slide 9: Closing
     {
       id: 'closing',
-      bg: 'from-blossom-plum via-blossom-burgundy to-blossom-wine',
+      bg: 'from-[#36081e] via-[#1c0422] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
             initial={{ scale: 0 }}
-            animate={{ scale: [0, 1.2, 1] }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-8xl mb-6 heartbeat inline-block"
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            className="text-7xl mb-5 inline-block select-none"
+            style={{ filter: 'drop-shadow(0 0 30px rgba(200,35,96,0.8))' }}
           >
             💕
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="font-display text-4xl text-white font-bold mb-3"
+            transition={{ delay: 0.4 }}
+            className="font-display text-3xl text-white font-bold mb-2"
           >
             Y la historia continúa…
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="font-display italic text-xl text-white/70 mb-8"
+            transition={{ delay: 0.6 }}
+            className="font-display italic text-lg text-rose-300 mb-8"
           >
-            mensaje por mensaje
+            cada día, en cada mensaje
           </motion.p>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.9 }}
-            className="flex items-center gap-3 text-white/60"
+            transition={{ delay: 0.8 }}
+            className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-md"
           >
-            <span className="font-display text-2xl font-semibold text-white">{p1}</span>
-            <Heart className="w-5 h-5 text-blossom-rose" fill="#E8B4B8" />
-            <span className="font-display text-2xl font-semibold text-white">{p2}</span>
+            <span className="font-display text-xl font-semibold text-white">{p1}</span>
+            <Heart className="w-5 h-5 text-rose-500 fill-rose-500 animate-pulse" />
+            <span className="font-display text-xl font-semibold text-white">{p2}</span>
           </motion.div>
         </div>
       ),
@@ -499,7 +550,7 @@ function buildSlides(analytics) {
           particleCount: 150,
           spread: 100,
           origin: { y: 0.6 },
-          colors: ['#E8B4B8', '#C07B8E', '#8B3A52', '#F0A896', '#D4A853'],
+          colors: ['#c82360', '#9060ff', '#f04080', '#ffd966', '#ff80ad'],
         });
       },
     },
@@ -559,16 +610,16 @@ export default function LoveWrapped({ analytics, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md px-4"
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="relative w-full max-w-sm h-[85vh] max-h-[700px] rounded-3xl overflow-hidden shadow-2xl"
+        exit={{ scale: 0.92, opacity: 0 }}
+        className="relative w-full max-w-sm h-[85vh] max-h-[720px] rounded-3xl overflow-hidden shadow-2xl border border-white/10"
         style={{ userSelect: 'none' }}
       >
-        {/* Gradient background */}
+        {/* Background gradient */}
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
@@ -580,11 +631,11 @@ export default function LoveWrapped({ analytics, onClose }) {
           />
         </AnimatePresence>
 
-        {/* Decorative circles */}
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+        {/* Ambient glow dots */}
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-rose-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
 
-        {/* Top UI */}
+        {/* Top Progress & Controls */}
         <div className="absolute top-0 left-0 right-0 z-20 px-4 pt-4">
           <ProgressBar
             total={slides.length}
@@ -594,15 +645,21 @@ export default function LoveWrapped({ analytics, onClose }) {
           />
           <div className="flex items-center justify-between mt-3">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blossom-wine flex items-center justify-center">
-                <Heart className="w-3.5 h-3.5 text-white" fill="white" />
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-glow-wine"
+                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+              >
+                ♥
               </div>
-              <span className="font-display text-white text-sm font-medium">Love Wrapped</span>
+              <span className="font-display text-white text-sm font-medium tracking-wide">
+                Love Wrapped
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsPlaying(p => !p)}
-                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                aria-label={isPlaying ? 'Pausar' : 'Reproducir'}
               >
                 {isPlaying
                   ? <Pause className="w-3.5 h-3.5 text-white" />
@@ -611,7 +668,8 @@ export default function LoveWrapped({ analytics, onClose }) {
               </button>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                aria-label="Cerrar"
               >
                 <X className="w-4 h-4 text-white" />
               </button>
@@ -619,15 +677,15 @@ export default function LoveWrapped({ analytics, onClose }) {
           </div>
         </div>
 
-        {/* Slide content */}
+        {/* Slide Content */}
         <div className="absolute inset-0 z-10 pt-20 pb-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id}
-              initial={{ opacity: 0, x: 30 }}
+              initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.35 }}
+              exit={{ opacity: 0, x: -24 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
               className="h-full"
             >
               {slide.content}
@@ -635,35 +693,37 @@ export default function LoveWrapped({ analytics, onClose }) {
           </AnimatePresence>
         </div>
 
-        {/* Navigation touch zones */}
+        {/* Invisible tap targets (left 35% prev, right 35% next) */}
         <button
-          className="absolute left-0 top-16 bottom-12 w-1/3 z-20 opacity-0"
+          className="absolute left-0 top-16 bottom-14 w-1/3 z-20 opacity-0 cursor-pointer"
           onClick={prev}
           aria-label="Anterior"
         />
         <button
-          className="absolute right-0 top-16 bottom-12 w-1/3 z-20 opacity-0"
+          className="absolute right-0 top-16 bottom-14 w-1/3 z-20 opacity-0 cursor-pointer"
           onClick={next}
           aria-label="Siguiente"
         />
 
-        {/* Visible nav arrows */}
+        {/* Bottom Nav arrows & Counter */}
         <div className="absolute bottom-4 left-0 right-0 z-20 flex items-center justify-center gap-6">
           <button
             onClick={prev}
             disabled={current === 0}
-            className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 disabled:opacity-30 flex items-center justify-center transition-all"
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-20 flex items-center justify-center transition-all"
+            aria-label="Anterior diapositiva"
           >
-            <ChevronLeft className="w-5 h-5 text-white" />
+            <ChevronLeft className="w-4 h-4 text-white" />
           </button>
           <span className="font-mono text-white/50 text-xs">
             {current + 1} / {slides.length}
           </span>
           <button
             onClick={next}
-            className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all"
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+            aria-label="Siguiente diapositiva"
           >
-            <ChevronRight className="w-5 h-5 text-white" />
+            <ChevronRight className="w-4 h-4 text-white" />
           </button>
         </div>
       </motion.div>

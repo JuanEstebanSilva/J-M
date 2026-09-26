@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: '#memories',   label: 'Memorias',   icon: Heart },
 ];
 
-export default function Navbar({ names }) {
+export default function Navbar({ names, onOpenWrapped }) {
   const [scrolled, setScrolled]  = useState(false);
   const [menuOpen, setMenuOpen]  = useState(false);
   const [active, setActive]      = useState('hero');
@@ -83,7 +83,7 @@ export default function Navbar({ names }) {
                 <button
                   key={href}
                   onClick={() => handleNav(href)}
-                  className="relative px-4 py-2 text-sm rounded-full transition-all duration-200"
+                  className="relative px-3.5 py-1.5 text-sm rounded-full transition-all duration-200"
                   style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.55)' }}
                 >
                   {isActive && (
@@ -98,17 +98,41 @@ export default function Navbar({ names }) {
                 </button>
               );
             })}
+
+            {/* Love Wrapped CTA */}
+            {onOpenWrapped && (
+              <button
+                onClick={onOpenWrapped}
+                className="ml-3 px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-white transition-all duration-300 shadow-glow-wine hover:scale-105 active:scale-95 border border-rose-500/30"
+                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+              >
+                <Sparkles size={13} className="text-rose-200 animate-spin-slow" />
+                <span>✦ Ver Wrapped ✦</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2 rounded-xl transition-colors"
-            style={{ color: 'rgba(255,255,255,0.7)' }}
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Menú"
-          >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            {onOpenWrapped && (
+              <button
+                onClick={onOpenWrapped}
+                className="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 text-white border border-rose-500/30"
+                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+              >
+                <Sparkles size={12} className="text-rose-200" />
+                <span>Wrapped</span>
+              </button>
+            )}
+            <button
+              className="p-2 rounded-xl transition-colors"
+              style={{ color: 'rgba(255,255,255,0.7)' }}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Menú"
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
       </motion.nav>
 
@@ -141,6 +165,17 @@ export default function Navbar({ names }) {
                   {label}
                 </button>
               ))}
+
+              {onOpenWrapped && (
+                <button
+                  onClick={() => { setMenuOpen(false); onOpenWrapped(); }}
+                  className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium text-white transition-all duration-200 mt-3 shadow-glow-wine border border-rose-500/30"
+                  style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+                >
+                  <Sparkles size={16} className="text-rose-200" />
+                  <span>✦ Ver Love Wrapped ✦</span>
+                </button>
+              )}
             </motion.div>
           </motion.div>
         )}

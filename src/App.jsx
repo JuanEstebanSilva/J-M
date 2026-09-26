@@ -10,6 +10,7 @@ import CoupleStats      from './components/CoupleStats.jsx';
 import ActivityCharts   from './components/ActivityCharts.jsx';
 import VocabularySection from './components/VocabularySection.jsx';
 import MemoriesSection  from './components/MemoriesSection.jsx';
+import LoveWrapped      from './components/LoveWrapped.jsx';
 
 // ─── Parse & compute analytics once (memoized) ───────────────────────────────
 function useAnalytics() {
@@ -43,14 +44,14 @@ function ErrorScreen({ message }) {
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
-function Dashboard({ analytics }) {
+function Dashboard({ analytics, onOpenWrapped }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
     >
-      <Navbar names={analytics.participants} />
+      <Navbar names={analytics.participants} onOpenWrapped={onOpenWrapped} />
 
       {/* Global ambient glows */}
       <div className="glow-overlay top-left"    aria-hidden="true" />
@@ -58,7 +59,7 @@ function Dashboard({ analytics }) {
       <div className="glow-overlay bottom-center" aria-hidden="true" />
 
       <main className="relative z-10">
-        <HeroSection      analytics={analytics} />
+        <HeroSection analytics={analytics} onOpenWrapped={onOpenWrapped} />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <CoupleStats      analytics={analytics} />
@@ -80,7 +81,7 @@ function Dashboard({ analytics }) {
         <footer className="text-center py-16 px-4">
           <div className="h-px mb-10 max-w-xs mx-auto" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.3), transparent)' }} />
           <motion.div
-            className="text-3xl mb-3"
+            className="text-3xl mb-3 select-none"
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           >
@@ -104,6 +105,7 @@ export default function App() {
 
   // Welcome screen: show for 2.8s then fade to dashboard
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showWrapped, setShowWrapped] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowWelcome(false), 2800);
@@ -120,10 +122,23 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Dashboard always rendered, but initially invisible under welcome */}
+      {/* Dashboard rendered after welcome transition */}
       {analytics && !showWelcome && (
-        <Dashboard analytics={analytics} />
+        <Dashboard
+          analytics={analytics}
+          onOpenWrapped={() => setShowWrapped(true)}
+        />
       )}
+
+      {/* Love Wrapped Stories Modal */}
+      <AnimatePresence>
+        {showWrapped && analytics && (
+          <LoveWrapped
+            analytics={analytics}
+            onClose={() => setShowWrapped(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

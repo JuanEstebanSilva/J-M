@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, FileText, Image, Calendar } from 'lucide-react';
+import { MessageCircle, FileText, Image, Calendar, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CountUp, StatCard } from './ui.jsx';
 
@@ -17,7 +17,7 @@ function formatDate(date) {
   });
 }
 
-export default function HeroSection({ analytics }) {
+export default function HeroSection({ analytics, onOpenWrapped }) {
   const { participants, firstDate, lastDate, daysTotal, totalMessages, totalWords, totalMediaAll } = analytics;
   const [p1, p2 = '?'] = participants;
   const firedRef = useRef(false);
@@ -159,6 +159,22 @@ export default function HeroSection({ analytics }) {
             </div>
           </button>
         </motion.div>
+
+        {/* Love Wrapped launch button */}
+        {onOpenWrapped && (
+          <motion.div {...fadeUp(0.2)} className="flex justify-center -mt-6 mb-12">
+            <button
+              onClick={onOpenWrapped}
+              className="group relative px-6 py-3 rounded-full text-sm font-medium text-white flex items-center gap-2.5 transition-all duration-300 hover:scale-105 active:scale-95 shadow-glow-wine border border-rose-500/40 overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #880b3a 0%, #c82360 50%, #9060ff 100%)' }}
+            >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Sparkles size={16} className="text-rose-200 animate-spin-slow" />
+              <span className="tracking-wide font-medium">✦ Ver Nuestro Love Wrapped ✦</span>
+              <span className="text-rose-200 group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </motion.div>
+        )}
 
         {/* Quick stat cards */}
         <motion.div {...fadeUp(0.25)} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
