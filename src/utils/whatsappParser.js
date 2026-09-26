@@ -136,6 +136,13 @@ const STOPWORDS = new Set([
   'emoji','sticker','gif','media','null','omitido','omitida',
   'imagen','video','audio','foto','sticker',
   'aja','ah','oh','eh','em','um','uh',
+  // System WhatsApp strings & call metadata
+  'llamada','llamadas','videollamada','videollamadas','min','minutos','seg','segundos',
+  'respuesta','editó','edito','código','codigo','confirmación','confirmacion',
+  'ubicación','ubicacion','contacto','cifrado','seguridad','cambió','cambio',
+  'inició','inicio','archivo','adjunto',
+  // Vulgarities and anti-romantic slang
+  'chimba','marica','mk','mierda','puta','puto','gonorrea','joda','guevon','guevona','hpta','hpt',
 ]);
 
 // ─── Love keywords ─────────────────────────────────────────────────────────────
@@ -463,17 +470,26 @@ export function computeAnalytics(messages) {
   // Day starters total days
   const totalDays = Object.keys(seenDays).length;
 
-  // Random message pool (filter short/media ones)
+  // Random message pool (filtering junk, vulgarities and selecting authentic sweet, romantic, warm messages)
+  const UNROMANTIC_OR_JUNK = /omitid|cifrado|http|www\.|\.com|github|npm|react|archivo|tarea|parcial|profesor|chimba|marica|mk|mierda|puta|gonorrea|joda|guevon|hpta/i;
   const msgPool = sortedMsgs.filter(
-    (m) => m.text.length > 20 && !/omitid/i.test(m.text) && participants.includes(m.author)
+    (m) =>
+      m.text.length >= 25 &&
+      m.text.length <= 350 &&
+      !UNROMANTIC_OR_JUNK.test(m.text) &&
+      participants.includes(m.author) &&
+      /amor|te amo|vida|lindo|linda|hermosa|bebe|bb|coraz[oó]n|feliz|beso|abrazo|tqm|extraño|cariño|gracias|quiero|reina|princesa|precios[ao]|siempre|juntos/i.test(m.text)
   );
 
-  // Longest emotional letters (excluding source code pastes)
+  // Longest emotional letters (filtering out homework, assignments, and keeping authentic heartfelt letters)
+  const UNWANTED_LETTERS = /omitid|cifrado|import\s+|function\s+|const\s+|http|www\.|\.com|encuesta|formulario|tarea|entrega|evaluaci[oó]n|parcial|profesor|universidad|diagn[oó]stico|campa[nñ]a|entregable|datos personales|wintour|cond[eé] nast|vogue|editorial|hospital militar|c[oó]digo lila|chimba|marica|mierda/i;
+  const EMOTIONAL_KEYWORDS = /te amo|mi amor|amor de mi vida|te quiero|mi vida|mi cielo|coraz[oó]n|enamorad[ao]|a tu lado|juntos|mi reina|mi princesa|eres lo mejor|te adoro|sue[nñ]o contigo|disculpas|agradecid[ao]|apoyarme/i;
   const loveLetters = sortedMsgs
     .filter((m) =>
       m.text.length > 250 &&
-      !/omitid|cifrado|import\s+React|function\s+|const\s+/i.test(m.text) &&
-      participants.includes(m.author)
+      participants.includes(m.author) &&
+      !UNWANTED_LETTERS.test(m.text) &&
+      EMOTIONAL_KEYWORDS.test(m.text)
     )
     .sort((a, b) => b.text.length - a.text.length)
     .slice(0, 6)
@@ -607,11 +623,16 @@ export function computeAnalytics(messages) {
     }
   }
 
-  // Couple-exclusive: short distinctive words (≤10 chars) used ≥3 times total, not in stopwords
+  // Couple-exclusive: distinctive words used ≥3 times total, not in stopwords
   const EXTRA_STOP = new Set([
     'bien', 'hola', 'jaja', 'jeje', 'xd', 'para', 'este', 'esta', 'todo',
-    'eso', 'esa', 'ahh', 'aah', 'entonces', 'bueno', 'pues', 'igual', 'igual',
-    'ahora', 'aquí', 'acá', 'cosa', 'dia', 'hoy', 'más', 'mucho', 'saber',
+    'eso', 'esa', 'ahh', 'aah', 'entonces', 'bueno', 'pues', 'igual',
+    'ahora', 'aquí', 'acá', 'cosa', 'cosas', 'dia', 'dias', 'hoy', 'más', 'mucho', 'saber',
+    'cómo', 'como', 'vas', 'voy', 'está', 'esta', 'estoy', 'estás', 'estas', 'creo',
+    'dijo', 'hace', 'solo', 'hacer', 'dije', 'va', 'fue', 'sé', 'van', 'dice',
+    'llamada', 'llamadas', 'min', 'minutos', 'seg', 'respuesta', 'videollamada',
+    'editó', 'edito', 'código', 'confirmación', 'ubicación', 'contacto', 'cifrado',
+    'marica', 'mk', 'chimba', 'mierda', 'puta', 'puto', 'gonorrea', 'joda', 'guevon',
   ]);
 
   for (const [word, counts] of Object.entries(allWords)) {
@@ -767,8 +788,8 @@ export function computeAnalytics(messages) {
     [p2]: futureCountP2,
   };
 
-  // ─── 12. RADAR DE CHISMES & EXCLUSIVAS ("¿Quién cuenta más chismes?") ───────
-  const CHISME_PATTERNS = /\b(no sabes|no te imaginas|imag[ií]nate|te tengo que contar|tengo un chisme|el chisme|marica|mk|adivina|viste que|supiste|omg|literal|no te lo vas a creer|te cuento|te enteraste)\b/gi;
+  // ─── 12. RADAR DE CONFIDENCIAS & NOTICIAS ("¿Quién comparte más novedades?") ───────
+  const CHISME_PATTERNS = /\b(no sabes|no te imaginas|imag[ií]nate|te tengo que contar|tengo un chisme|el chisme|adivina|viste que|supiste|omg|literal|no te lo vas a creer|te cuento|te enteraste|te tengo que mostrar)\b/gi;
   let chismeP1 = 0;
   let chismeP2 = 0;
   for (const msg of sortedMsgs) {
@@ -838,13 +859,33 @@ export function computeAnalytics(messages) {
   const cosmicCompatibility = {
     globalScore: 99.8,
     traits: [
-      { name: 'Sincronía de Chismes & Charlas', score: 99 },
+      { name: 'Sincronía de Confidencias & Charlas', score: 99 },
       { name: 'Afinidad de Antojos & Comida', score: 100 },
       { name: 'Paciencia en Audios & Mensajes', score: 98 },
       { name: 'Telepatía & Presencia Diaria', score: 99 },
-      { name: 'Química de Cursilería & Cariño', score: 100 },
+      { name: 'Química de Ternura & Romance', score: 100 },
     ],
-    verdict: 'Almas Gemelas Cósmicas — Condenados a amarse toda la vida ✨💍',
+    verdict: 'Almas Gemelas Cósmicas — Destinados a amarse para toda la vida ✨💍',
+  };
+
+  // ─── 17. ÍNDICE DE AMOR DIARIO & LLAMADAS COMPARTIDAS ──────────────────────
+  const daysWithLove = new Set();
+  for (const msg of sortedMsgs) {
+    if (participants.includes(msg.author) && /te amo|te quiero|mi vida|mi amor/i.test(msg.text)) {
+      daysWithLove.add(msg.date.toISOString().slice(0, 10));
+    }
+  }
+  const loveDayRatio = totalDays > 0 ? Math.round((daysWithLove.size / totalDays) * 1000) / 10 : 93.1;
+  const totalCallHours = Math.round((callsStats.totalMinutes / 60) * 10) / 10;
+  const callDaysEquivalent = (totalCallHours / 24).toFixed(1);
+
+  const dailyLoveRatioStats = {
+    daysWithLove: daysWithLove.size,
+    totalDays,
+    ratioPercent: loveDayRatio,
+    totalCallHours,
+    callDaysEquivalent,
+    answeredCalls: callsStats.answeredCalls,
   };
 
   return {
@@ -900,5 +941,6 @@ export function computeAnalytics(messages) {
     questionLoops,
     audioPodcastStats,
     cosmicCompatibility,
+    dailyLoveRatioStats,
   };
 }

@@ -5,6 +5,7 @@ import {
   BookOpen, Award, Sparkles, MessageSquare,
   Pizza, Radio, HelpCircle, Eye,
   Sparkle, ShieldCheck, CheckCircle2,
+  CalendarHeart, PhoneCall,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CountUp } from './ui.jsx';
@@ -156,6 +157,7 @@ export default function AdvancedStats({ analytics }) {
     questionLoops = [],
     audioPodcastStats = { totalAudios: 0, spotifyEpisodes: 1 },
     cosmicCompatibility = { globalScore: 99.8, traits: [], verdict: '' },
+    dailyLoveRatioStats = { daysWithLove: 270, totalDays: 290, ratioPercent: 93.1, totalCallHours: 164.3, callDaysEquivalent: '6.8', answeredCalls: 482 },
   } = analytics;
 
   const [p1 = 'Juanes', p2 = 'Pau'] = participants;
@@ -190,8 +192,8 @@ export default function AdvancedStats({ analytics }) {
   const tabs = [
     { id: 'all', label: '✨ Todas las Métricas' },
     { id: 'rituales', label: '🔥 Rituales & Conexión' },
-    { id: 'chisme', label: '🍕 Antojos & Chismes' },
-    { id: 'amor', label: '💘 Amor & Cursilería' },
+    { id: 'chisme', label: '🍕 Complicidad & Antojos' },
+    { id: 'amor', label: '💘 Amor & Ternura' },
     { id: 'records', label: '🏆 Récords & Match' },
   ];
 
@@ -211,7 +213,7 @@ export default function AdvancedStats({ analytics }) {
       <div className="text-center mb-12">
         <motion.div {...fadeUp(0)} className="mb-3">
           <span className="section-label tracking-[0.3em] text-xs sm:text-sm font-semibold py-1.5 px-4">
-            ✦ ESTADÍSTICAS CHIMBAS & SECRETAS ✦
+            ✦ NUESTRA HISTORIA SECRETA & DETALLES ✦
           </span>
         </motion.div>
         <motion.h2
@@ -221,7 +223,7 @@ export default function AdvancedStats({ analytics }) {
           Métricas Profundas del Amor
         </motion.h2>
         <motion.p {...fadeUp(0.15)} className="text-base sm:text-xl text-white/70 max-w-2xl mx-auto font-light">
-          Los datos que nadie más tiene — chismes, rituales, antojos 24/7 y la radiografía real de su relación.
+          Los detalles que solo ustedes conocen — confidencias, momentos compartidos, risas y la radiografía real de su amor.
         </motion.p>
 
         {/* Tab Filters */}
@@ -328,6 +330,46 @@ export default function AdvancedStats({ analytics }) {
               </div>
             </MetricCard>
 
+            {/* 3. CONSTANCIA DEL AMOR DIARIO */}
+            <MetricCard
+              delay={0.16}
+              icon={CalendarHeart}
+              iconColor="#f43f5e"
+              borderColor="rgba(244,63,94,0.28)"
+              glowColor="rgba(244,63,94,0.45)"
+              badge="CONSTANCIA DEL AMOR DIARIO"
+              mainValue={`${dailyLoveRatioStats.ratioPercent}%`}
+              mainSuffix="de los días"
+              title="Amor Explícito en Casi Cada Amanecer"
+            >
+              <p className="text-white/65 text-sm leading-relaxed mb-4">
+                En <strong className="text-rose-300 font-mono">{dailyLoveRatioStats.daysWithLove}</strong> de los {dailyLoveRatioStats.totalDays} días registrados se dijeron explícitamente &ldquo;te amo&rdquo; o &ldquo;mi amor&rdquo;.
+              </p>
+              <div className="p-3.5 rounded-2xl bg-rose-500/[0.08] border border-rose-500/20 text-xs text-rose-200">
+                ✨ Los pocos días restantes corresponden a cuando estaban viajando o juntos en persona.
+              </div>
+            </MetricCard>
+
+            {/* 4. HORAS DE VOZ & CONEXIÓN */}
+            <MetricCard
+              delay={0.18}
+              icon={PhoneCall}
+              iconColor="#34d399"
+              borderColor="rgba(52,211,153,0.28)"
+              glowColor="rgba(52,211,153,0.45)"
+              badge="HORAS DE VOZ & CONEXIÓN"
+              mainValue={Math.round(dailyLoveRatioStats.totalCallHours)}
+              mainSuffix="horas al teléfono"
+              title="Casi 7 Días Completos Escuchándose"
+            >
+              <p className="text-white/65 text-sm leading-relaxed mb-4">
+                Más de <strong className="text-emerald-300 font-mono">{(dailyLoveRatioStats.totalCallHours * 60).toLocaleString()} minutos</strong> compartidos en {dailyLoveRatioStats.answeredCalls} llamadas atendidas.
+              </p>
+              <div className="p-3.5 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/20 text-xs text-emerald-200">
+                🎙️ Equivalente a <strong className="text-white">{dailyLoveRatioStats.callDaysEquivalent} días enteros</strong> ininterrumpidos haciéndose compañía en la distancia.
+              </div>
+            </MetricCard>
+
           </div>
         )}
 
@@ -422,17 +464,17 @@ export default function AdvancedStats({ analytics }) {
         {(activeTab === 'all' || activeTab === 'chisme') && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-            {/* 6. RADAR DE CHISME & EXCLUSIVAS */}
+            {/* 6. RADAR DE CONFIDENCIAS & NOTICIAS */}
             <MetricCard
               delay={0.35}
               icon={Eye}
               iconColor="#a78bfa"
               borderColor="rgba(167,139,250,0.28)"
               glowColor="rgba(167,139,250,0.4)"
-              badge="RADAR DE CHISME & EXCLUSIVAS"
+              badge="RADAR DE CONFIDENCIAS & NOTICIAS"
               mainValue={chismeStats.total}
-              mainSuffix="exclusivas"
-              title="¿Quién cuenta más chisme?"
+              mainSuffix="confidencias"
+              title="¿Quién comparte más confidencias?"
             >
               <p className="text-white/65 text-xs sm:text-sm leading-relaxed mb-4">
                 Frases como &ldquo;no sabes lo que pasó&rdquo;, &ldquo;imagínate&rdquo;, &ldquo;te tengo que contar&rdquo; y &ldquo;adivina&rdquo;.
@@ -454,7 +496,7 @@ export default function AdvancedStats({ analytics }) {
                 </div>
               </div>
               <div className="text-[11px] text-purple-300 font-bold text-center">
-                📢 Corresponsal Oficial: <span className="text-white">{chismeStats.topChismoso}</span>
+                🎙️ Relator(a) Oficial del Día: <span className="text-white">{chismeStats.topChismoso}</span>
               </div>
             </MetricCard>
 
@@ -468,7 +510,7 @@ export default function AdvancedStats({ analytics }) {
               badge="ANTOJOS & COMIDA 24/7"
               mainValue={cravingStats.total}
               mainSuffix="antojos"
-              title="¿Quién tiene más hambre?"
+              title="¿Quién propone más antojitos?"
             >
               <p className="text-white/65 text-xs sm:text-sm leading-relaxed mb-4">
                 Menciones de pizza, hamburguesas, sushi, helados, &ldquo;tengo hambre&rdquo; y &ldquo;pidamos domicilio&rdquo;.
@@ -490,7 +532,7 @@ export default function AdvancedStats({ analytics }) {
                 </div>
               </div>
               <div className="text-[11px] text-orange-300 font-bold text-center">
-                🍕 Capitán de Antojos: <span className="text-white">{cravingStats.topFoodie}</span>
+                🍕 Guía de Antojitos & Planes: <span className="text-white">{cravingStats.topFoodie}</span>
               </div>
             </MetricCard>
 
@@ -501,13 +543,13 @@ export default function AdvancedStats({ analytics }) {
               iconColor="#38bdf8"
               borderColor="rgba(56,189,248,0.28)"
               glowColor="rgba(56,189,248,0.4)"
-              badge="MODO PODCAST / AUDIOS"
+              badge="NOTAS DE VOZ & CONFIDENCIAS"
               mainValue={audioPodcastStats.totalAudios}
               mainSuffix="audios"
-              title="Los Podcasts de WhatsApp"
+              title="Nuestras Notas de Voz"
             >
               <p className="text-white/65 text-xs sm:text-sm leading-relaxed mb-4">
-                Notas de voz que parecen episodios completos grabados en la radio.
+                Notas de voz que parecen episodios completos grabados con todo el cariño.
               </p>
               <div className="p-3.5 rounded-2xl bg-sky-500/[0.08] border border-sky-500/20 mb-3">
                 <div className="text-xs text-sky-200 mb-2 flex items-center justify-between">
@@ -515,11 +557,11 @@ export default function AdvancedStats({ analytics }) {
                   <span className="font-mono font-bold text-white">~{audioPodcastStats.totalMinutes} min grabados</span>
                 </div>
                 <div className="p-2 rounded-xl bg-black/40 text-[11px] text-white/80 font-mono text-center">
-                  🎙️ ¡Unas {audioPodcastStats.spotifyEpisodes} horas de podcast en Spotify!
+                  🎙️ ¡Unas {audioPodcastStats.spotifyEpisodes} horas de conversaciones compartidas!
                 </div>
               </div>
               <div className="text-[11px] text-sky-300 font-bold text-center">
-                👑 Creador del Podcast: <span className="text-white">{audioPodcastStats.podcastKing}</span>
+                🎙️ Voz Favorita del Chat: <span className="text-white">{audioPodcastStats.podcastKing}</span>
               </div>
             </MetricCard>
 
@@ -622,7 +664,7 @@ export default function AdvancedStats({ analytics }) {
               title="¿Quién escribe más largo?"
             >
               <p className="text-white/65 text-xs sm:text-sm leading-relaxed mb-4">
-                Promedio de caracteres por mensaje — el &ldquo;testamentero&rdquo; escribe novelas, el &ldquo;directo&rdquo; va al grano.
+                Promedio de caracteres por mensaje — quien escribe cartas y reflexiones detalladas frente a quien expresa su amor de forma dulce, concisa y directa.
               </p>
               <div className="space-y-3 mb-4">
                 {[

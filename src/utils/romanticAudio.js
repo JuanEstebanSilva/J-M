@@ -1,30 +1,73 @@
 /**
  * Romantic Audio Controller
  * Manages background music with soft ambient volume, smooth fade-in/fade-out,
- * seamless switching between "La Distancia" and "Tengo Ganas", and user gesture auto-unlock.
+ * seamless playlist auto-queueing (next song plays automatically on track end),
+ * and user gesture auto-unlock.
  */
 
-import laDistanciaUrl from '../data/music/laDistancia.mp3';
-import tengoGanasUrl from '../data/music/tengoGanas.mp3';
+import algoContigoUrl from '../data/music/Algo Contigo - Los panchos.mp3';
+import enfermedadDeTiUrl from '../data/music/Enfermedad De Ti - Andres Cepeda.mp3';
+import entreMiVidaYLaTuyaUrl from '../data/music/Entre mi vida y la tuya -Fonseca.mp3';
+import laDistanciaUrl from '../data/music/La Distancia - Manuel Medrano.mp3';
+import siTeAcuerdasDeMiUrl from '../data/music/Si te Acuerdas de Mi -Fonseca.mp3';
+import tengoGanasUrl from '../data/music/Tengo Ganas - Andres Cepeda.mp3';
+import unaYOtraVezUrl from '../data/music/Una y Otra Vez - Manuel Medrano .mp3';
 
-export const TRACKS = {
-  laDistancia: {
+export const PLAYLIST = [
+  {
     id: 'laDistancia',
     title: 'La Distancia',
-    artist: 'Nuestra Melodía',
+    artist: 'Manuel Medrano',
     url: laDistanciaUrl,
-    description: 'La canción de fondo que acompaña cada recuerdo',
+    filename: 'La Distancia - Manuel Medrano.mp3',
   },
-  tengoGanas: {
+  {
     id: 'tengoGanas',
     title: 'Tengo Ganas',
-    artist: 'Momento Especial',
+    artist: 'Andrés Cepeda',
     url: tengoGanasUrl,
-    description: 'Una melodía para encender la complicidad',
+    filename: 'Tengo Ganas - Andres Cepeda.mp3',
   },
-};
+  {
+    id: 'algoContigo',
+    title: 'Algo Contigo',
+    artist: 'Los Panchos',
+    url: algoContigoUrl,
+    filename: 'Algo Contigo - Los panchos.mp3',
+  },
+  {
+    id: 'entreMiVida',
+    title: 'Entre mi vida y la tuya',
+    artist: 'Fonseca',
+    url: entreMiVidaYLaTuyaUrl,
+    filename: 'Entre mi vida y la tuya -Fonseca.mp3',
+  },
+  {
+    id: 'enfermedadDeTi',
+    title: 'Enfermedad De Ti',
+    artist: 'Andrés Cepeda',
+    url: enfermedadDeTiUrl,
+    filename: 'Enfermedad De Ti - Andres Cepeda.mp3',
+  },
+  {
+    id: 'siTeAcuerdas',
+    title: 'Si te Acuerdas de Mi',
+    artist: 'Fonseca',
+    url: siTeAcuerdasDeMiUrl,
+    filename: 'Si te Acuerdas de Mi -Fonseca.mp3',
+  },
+  {
+    id: 'unaYOtraVez',
+    title: 'Una y Otra Vez',
+    artist: 'Manuel Medrano',
+    url: unaYOtraVezUrl,
+    filename: 'Una y Otra Vez - Manuel Medrano .mp3',
+  },
+];
 
-const DEFAULT_VOLUME = 0.28; // Suavecito y bajito de fondo como pidió el usuario
+export const TRACKS = Object.fromEntries(PLAYLIST.map((t) => [t.id, t]));
+
+const DEFAULT_VOLUME = 0.28; // Suave y envolvente de fondo
 
 let currentTrackKey = 'laDistancia';
 let audioElement = null;
@@ -35,9 +78,14 @@ let unlockAttached = false;
 let fadeInterval = null;
 
 function notify() {
+  const currentTrack = TRACKS[currentTrackKey] || PLAYLIST[0];
+  const currentIndex = PLAYLIST.findIndex((t) => t.id === currentTrack.id);
   const state = {
     isPlaying,
-    currentTrack: TRACKS[currentTrackKey],
+    currentTrack,
+    currentIndex: currentIndex >= 0 ? currentIndex : 0,
+    totalTracks: PLAYLIST.length,
+    playlist: PLAYLIST,
     volume: currentVolume,
   };
   listeners.forEach((cb) => {
@@ -54,9 +102,9 @@ function getAudioElement() {
 
   if (!audioElement) {
     audioElement = new Audio();
-    audioElement.loop = true;
+    audioElement.loop = false; // Continuously moves to next song when finished!
     audioElement.volume = currentVolume;
-    audioElement.src = TRACKS[currentTrackKey].url;
+    audioElement.src = (TRACKS[currentTrackKey] || PLAYLIST[0]).url;
 
     audioElement.addEventListener('play', () => {
       isPlaying = true;
@@ -68,9 +116,9 @@ function getAudioElement() {
       notify();
     });
 
+    // Auto-advance to next song seamlessly as requested by the user
     audioElement.addEventListener('ended', () => {
-      isPlaying = false;
-      notify();
+      playNextTrack();
     });
 
     audioElement.addEventListener('error', (e) => {
@@ -115,7 +163,7 @@ function fadeTo(targetVolume, durationMs = 1200, onComplete) {
 }
 
 /**
- * Starts background music (defaults to 'laDistancia') with smooth fade-in
+ * Starts background music with smooth fade-in
  */
 export function startBackgroundMusic(trackKey) {
   const el = getAudioElement();
@@ -126,19 +174,18 @@ export function startBackgroundMusic(trackKey) {
     el.src = TRACKS[trackKey].url;
   }
 
-  el.volume = 0.02; // Start very quiet for smooth fade-in
+  el.volume = 0.03; // Start quiet for smooth fade-in
 
   const playPromise = el.play();
   if (playPromise !== undefined) {
     return playPromise
       .then(() => {
         isPlaying = true;
-        fadeTo(currentVolume, 1500);
+        fadeTo(currentVolume, 1400);
         notify();
         return true;
       })
       .catch((err) => {
-        // Autoplay blocked by browser policy — attach one-time user interaction listener
         console.log('Autoplay deferred until first user interaction:', err.message);
         attachAutoUnlock();
         isPlaying = false;
@@ -157,7 +204,7 @@ export function stopBackgroundMusic() {
   const el = getAudioElement();
   if (!el) return false;
 
-  fadeTo(0, 600, () => {
+  fadeTo(0, 500, () => {
     el.pause();
     isPlaying = false;
     notify();
@@ -179,29 +226,46 @@ export function toggleBackgroundMusic() {
 }
 
 /**
- * Switches to a specific track or toggles to next track
+ * Advances to next track in playlist (or loops to start)
+ */
+export function playNextTrack() {
+  const currentIndex = PLAYLIST.findIndex((t) => t.id === currentTrackKey);
+  const nextIndex = (currentIndex + 1) % PLAYLIST.length;
+  const nextTrack = PLAYLIST[nextIndex];
+  return switchTrack(nextTrack.id);
+}
+
+/**
+ * Moves to previous track in playlist
+ */
+export function playPreviousTrack() {
+  const currentIndex = PLAYLIST.findIndex((t) => t.id === currentTrackKey);
+  const prevIndex = (currentIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+  const prevTrack = PLAYLIST[prevIndex];
+  return switchTrack(prevTrack.id);
+}
+
+/**
+ * Switches to a specific track
  */
 export function switchTrack(trackKey) {
-  const nextKey = trackKey || (currentTrackKey === 'laDistancia' ? 'tengoGanas' : 'laDistancia');
+  const nextKey = trackKey || PLAYLIST[(PLAYLIST.findIndex((t) => t.id === currentTrackKey) + 1) % PLAYLIST.length]?.id;
   if (!TRACKS[nextKey]) return;
 
   const el = getAudioElement();
   if (!el) return;
 
+  currentTrackKey = nextKey;
+  el.src = TRACKS[nextKey].url;
+
   if (isPlaying) {
-    fadeTo(0, 600, () => {
-      currentTrackKey = nextKey;
-      el.src = TRACKS[nextKey].url;
-      el.play()
-        .then(() => {
-          fadeTo(currentVolume, 1200);
-          notify();
-        })
-        .catch((e) => console.warn('Play switch error:', e));
-    });
+    el.play()
+      .then(() => {
+        fadeTo(currentVolume, 1000);
+        notify();
+      })
+      .catch((e) => console.warn('Play switch error:', e));
   } else {
-    currentTrackKey = nextKey;
-    el.src = TRACKS[nextKey].url;
     notify();
   }
 }
@@ -225,7 +289,7 @@ export function isMusicPlaying() {
 }
 
 export function getCurrentTrack() {
-  return TRACKS[currentTrackKey] || TRACKS.laDistancia;
+  return TRACKS[currentTrackKey] || PLAYLIST[0];
 }
 
 /**
@@ -235,7 +299,10 @@ export function subscribeToMusicState(callback) {
   listeners.add(callback);
   callback({
     isPlaying,
-    currentTrack: TRACKS[currentTrackKey],
+    currentTrack: TRACKS[currentTrackKey] || PLAYLIST[0],
+    currentIndex: PLAYLIST.findIndex((t) => t.id === currentTrackKey),
+    totalTracks: PLAYLIST.length,
+    playlist: PLAYLIST,
     volume: currentVolume,
   });
   return () => listeners.delete(callback);

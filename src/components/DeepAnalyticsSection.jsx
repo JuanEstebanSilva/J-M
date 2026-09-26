@@ -247,7 +247,7 @@ export default function DeepAnalyticsSection({ analytics }) {
               </span>
             </div>
             <h4 className="font-display text-lg font-bold text-white mb-1">
-              Podcaster del Amor
+              La Voz del Cariño
             </h4>
             <p className="text-xs text-amber-300/80 mb-3">{p1}</p>
             <div className="font-mono text-4xl font-black text-white mb-2">

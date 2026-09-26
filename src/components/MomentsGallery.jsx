@@ -8,7 +8,7 @@ import { playHeartChime } from '../utils/romanticAudio.js';
 
 export default function MomentsGallery() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [likes, setLikes] = useState({ 1: 52, 2: 74, 3: 63, 4: 88 });
+  const [likes, setLikes] = useState(() => Object.fromEntries(COUPLE_PHOTOS.map((p) => [p.id, 50 + (p.id * 7) % 45])));
   const [floatingHearts, setFloatingHearts] = useState([]);
 
   const handleLike = (e, id) => {

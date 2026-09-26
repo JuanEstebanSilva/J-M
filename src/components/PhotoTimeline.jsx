@@ -8,7 +8,7 @@ import {
   Maximize2, Sparkles, MapPin, Camera,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { COUPLE_PHOTOS } from '../data/photos.js';
+import { COUPLE_PHOTOS, PHOTO_CHAPTERS } from '../data/photos.js';
 import { playHeartChime } from '../utils/romanticAudio.js';
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
@@ -42,15 +42,11 @@ function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
     y.set(0);
   }, [x, y]);
 
-  /* Masonry sizing: alternating heights */
-  const isLarge = index === 0 || index === 3;
-  const aspectClass = isLarge ? 'aspect-[3/4]' : 'aspect-[4/5]';
-
   return (
     <motion.div
-      {...fadeUp(index * 0.1)}
+      {...fadeUp((index % 4) * 0.08)}
       ref={ref}
-      className={`relative group cursor-pointer ${isLarge ? 'row-span-2' : ''}`}
+      className="relative group cursor-pointer w-full"
       onMouseMove={handleMouse}
       onMouseLeave={handleLeave}
       onClick={() => onClick({ ...photo, index })}
@@ -62,12 +58,12 @@ function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
           group-hover:border-rose-500/40 transition-colors duration-500"
       >
         {/* ── Photo ─────────────────────────────────────────────────── */}
-        <div className={`relative ${aspectClass} overflow-hidden`}>
+        <div className="relative aspect-[4/5] overflow-hidden">
           <motion.img
             src={photo.src}
             alt={photo.alt}
             className="w-full h-full object-cover"
-            loading={index < 2 ? 'eager' : 'lazy'}
+            loading={index < 4 ? 'eager' : 'lazy'}
             whileHover={{ scale: 1.07 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           />
@@ -104,13 +100,13 @@ function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
             ))}
 
           {/* Bottom caption */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col gap-1">
-            <div className="flex items-end justify-between gap-2">
+          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 flex flex-col gap-1">
+            <div className="flex items-end justify-between gap-1.5">
               <div className="flex-1 min-w-0">
-                <h3 className="font-display text-white text-base sm:text-lg font-bold leading-tight truncate">
+                <h4 className="font-display text-white text-sm sm:text-base font-bold leading-tight truncate">
                   {photo.caption}
-                </h3>
-                <p className="text-white/65 text-xs leading-snug line-clamp-1 font-light mt-0.5">
+                </h4>
+                <p className="text-white/65 text-[11px] sm:text-xs leading-snug line-clamp-1 font-light mt-0.5">
                   {photo.subtitle}
                 </p>
               </div>
@@ -118,21 +114,21 @@ function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
               {/* Like button */}
               <button
                 onClick={(e) => { e.stopPropagation(); onLike(e, photo.id); }}
-                className="shrink-0 flex items-center gap-1.5 text-xs text-rose-300
-                  hover:text-white transition-all py-1.5 px-3 rounded-full
+                className="shrink-0 flex items-center gap-1 text-[11px] text-rose-300
+                  hover:text-white transition-all py-1 px-2.5 rounded-full
                   bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/30
                   backdrop-blur-sm active:scale-90"
                 aria-label="Reaccionar con amor"
               >
-                <Heart size={13} className="fill-rose-500 text-rose-500" />
+                <Heart size={12} className="fill-rose-500 text-rose-500" />
                 <span className="font-mono font-bold">{likes[photo.id] || 0}</span>
               </button>
             </div>
 
             {photo.location && (
-              <div className="flex items-center gap-1 text-[11px] text-rose-300/80 font-medium">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] text-rose-300/80 font-medium">
                 <MapPin size={10} />
-                <span>{photo.location}</span>
+                <span className="truncate">{photo.location}</span>
               </div>
             )}
           </div>
@@ -359,6 +355,17 @@ export default function PhotoTimeline() {
     }
   }, [selected, handleKeyDown]);
 
+  const [activeChapter, setActiveChapter] = useState('all'); // 'all' | 1 | 2 | 3
+
+  const displayedPhotos =
+    activeChapter === 'all'
+      ? COUPLE_PHOTOS
+      : PHOTO_CHAPTERS.find((ch) => ch.id === activeChapter)?.photos || COUPLE_PHOTOS;
+
+  const visibleChapters = PHOTO_CHAPTERS.filter(
+    (ch) => activeChapter === 'all' || activeChapter === ch.id
+  );
+
   return (
     <section id="gallery" className="py-20 relative">
       {/* Ambient glows */}
@@ -370,10 +377,10 @@ export default function PhotoTimeline() {
         style={{ background: 'radial-gradient(circle, #9060ff, transparent 70%)' }} />
 
       {/* ── Section header ──────────────────── */}
-      <div className="text-center mb-14">
+      <div className="text-center mb-10">
         <motion.div {...fadeUp(0)} className="mb-3">
           <span className="section-label tracking-[0.3em] text-xs sm:text-sm font-semibold py-1.5 px-4">
-            ✦ GALERIA DE RECUERDOS ✦
+            ✦ GALERÍA DE RECUERDOS (12 MOMENTOS EN 3 BLOQUES) ✦
           </span>
         </motion.div>
         <motion.h2
@@ -383,23 +390,136 @@ export default function PhotoTimeline() {
           Momentos que no cambiaría por nada
         </motion.h2>
         <motion.p {...fadeUp(0.14)} className="text-base sm:text-xl text-white/65 max-w-2xl mx-auto font-light">
-          Cada foto guarda una historia. Pasa el cursor para vivirla.
+          Nuestra historia organizada en 3 bloques de 4 recuerdos cada uno. Pasa el cursor para vivirlos o haz clic para ver cada detalle.
         </motion.p>
       </div>
 
-      {/* ── Masonry grid ────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {COUPLE_PHOTOS.map((photo, index) => (
-          <TiltCard
-            key={photo.id}
-            photo={photo}
-            index={index}
-            onClick={setSelected}
-            likes={likes}
-            onLike={handleLike}
-            floatingHearts={floatingHearts}
-          />
-        ))}
+      {/* ── Chapter Filter Tabs ──────────────── */}
+      <div className="flex flex-wrap items-center justify-center gap-2.5 mb-12">
+        <button
+          onClick={() => setActiveChapter('all')}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+            activeChapter === 'all'
+              ? 'bg-rose-500 text-white shadow-[0_0_20px_rgba(240,64,128,0.4)] scale-105'
+              : 'bg-white/[0.05] text-white/70 hover:bg-white/[0.1] hover:text-white border border-white/10'
+          }`}
+        >
+          ✨ Ver los 3 Bloques (12 Fotos)
+        </button>
+        <button
+          onClick={() => setActiveChapter(1)}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+            activeChapter === 1
+              ? 'bg-rose-500 text-white shadow-[0_0_20px_rgba(240,64,128,0.4)] scale-105'
+              : 'bg-white/[0.05] text-white/70 hover:bg-white/[0.1] hover:text-white border border-white/10'
+          }`}
+        >
+          🌸 Bloque 1: El Comienzo (Fotos 1 - 4)
+        </button>
+        <button
+          onClick={() => setActiveChapter(2)}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+            activeChapter === 2
+              ? 'bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] scale-105'
+              : 'bg-white/[0.05] text-white/70 hover:bg-white/[0.1] hover:text-white border border-white/10'
+          }`}
+        >
+          🤍 Bloque 2: Complicidad & Hogar (Fotos 5 - 8)
+        </button>
+        <button
+          onClick={() => setActiveChapter(3)}
+          className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+            activeChapter === 3
+              ? 'bg-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] scale-105'
+              : 'bg-white/[0.05] text-white/70 hover:bg-white/[0.1] hover:text-white border border-white/10'
+          }`}
+        >
+          ✨ Bloque 3: Magia & Risas (Fotos 9 - 12)
+        </button>
+      </div>
+
+      {/* ── 3 BLOQUES DE 4 IMÁGENES CADA UNO ─────────────── */}
+      <div className="space-y-16">
+        {visibleChapters.map((chapter, chIdx) => {
+          const badgeTheme = {
+            rose: {
+              badge: 'text-rose-300 bg-rose-500/15 border-rose-500/30',
+              divider: 'from-transparent via-rose-500/30 to-transparent',
+              pill: 'text-rose-300/90 bg-rose-500/10 border-rose-500/25 shadow-rose-500/5',
+              heart: 'text-rose-400 fill-rose-400',
+              nextLabel: 'Siguiente: Complicidad, Hogar & Horizontes',
+            },
+            purple: {
+              badge: 'text-purple-300 bg-purple-500/15 border-purple-500/30',
+              divider: 'from-transparent via-purple-500/30 to-transparent',
+              pill: 'text-purple-300/90 bg-purple-500/10 border-purple-500/25 shadow-purple-500/5',
+              heart: 'text-purple-400 fill-purple-400',
+              nextLabel: 'Siguiente: Magia, Risas & Días Inolvidables',
+            },
+            amber: {
+              badge: 'text-amber-300 bg-amber-500/15 border-amber-500/30',
+              divider: 'from-transparent via-amber-500/30 to-transparent',
+              pill: 'text-amber-300/90 bg-amber-500/10 border-amber-500/25 shadow-amber-500/5',
+              heart: 'text-amber-400 fill-amber-400',
+              nextLabel: 'Fin de la Galería',
+            },
+          }[chapter.badgeColor] || {
+            badge: 'text-rose-300 bg-rose-500/15 border-rose-500/30',
+            divider: 'from-transparent via-rose-500/30 to-transparent',
+            pill: 'text-rose-300/90 bg-rose-500/10 border-rose-500/25 shadow-rose-500/5',
+            heart: 'text-rose-400 fill-rose-400',
+            nextLabel: 'Siguiente Bloque',
+          };
+
+          return (
+            <div key={chapter.id} className="relative">
+              {/* Encabezado del bloque */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-6">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider border ${badgeTheme.badge}`}>
+                    ✦ {chapter.badge} ✦
+                  </span>
+                  <h3 className="text-white font-display text-lg sm:text-xl font-bold tracking-tight">
+                    {chapter.title}
+                  </h3>
+                </div>
+                <span className="text-xs text-white/50 font-light italic">
+                  {chapter.subtitle}
+                </span>
+              </div>
+
+              {/* Grid simétrico y perfecto de 4 fotos (4 columnas en desktop) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {chapter.photos.map((photo) => {
+                  const globalIdx = photo.id - 1;
+                  return (
+                    <TiltCard
+                      key={photo.id}
+                      photo={photo}
+                      index={globalIdx}
+                      onClick={setSelected}
+                      likes={likes}
+                      onLike={handleLike}
+                      floatingHearts={floatingHearts}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Separador elegante entre bloques cuando se muestran todos */}
+              {activeChapter === 'all' && chIdx < visibleChapters.length - 1 && (
+                <div className="flex items-center justify-center pt-16 gap-4">
+                  <div className={`h-px bg-gradient-to-r ${badgeTheme.divider} flex-1`} />
+                  <span className={`text-xs font-semibold flex items-center gap-2 px-4 py-1.5 rounded-full border shadow-lg ${badgeTheme.pill}`}>
+                    <Heart size={12} className={`${badgeTheme.heart} animate-pulse`} />
+                    {badgeTheme.nextLabel}
+                  </span>
+                  <div className={`h-px bg-gradient-to-r ${badgeTheme.divider} flex-1`} />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* ── Filmstrip thumbnails ─────────────── */}
@@ -407,13 +527,13 @@ export default function PhotoTimeline() {
         {...fadeUp(0.4)}
         className="mt-10 flex justify-center"
       >
-        <div className="flex items-center gap-2 p-2 rounded-2xl border border-white/[0.08]"
-          style={{ background: 'rgba(18,12,30,0.7)', backdropFilter: 'blur(16px)' }}>
-          {COUPLE_PHOTOS.map((photo, i) => (
+        <div className="flex items-center gap-2 p-2.5 rounded-2xl border border-white/[0.08] overflow-x-auto max-w-full"
+          style={{ background: 'rgba(18,12,30,0.75)', backdropFilter: 'blur(16px)' }}>
+          {displayedPhotos.map((photo) => (
             <button
               key={photo.id}
-              onClick={() => setSelected({ ...photo, index: i })}
-              className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden
+              onClick={() => setSelected({ ...photo, index: photo.id - 1 })}
+              className={`relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden
                 border-2 transition-all duration-300 hover:scale-105
                 ${selected?.id === photo.id
                   ? 'border-rose-500 shadow-lg shadow-rose-500/30 scale-105'
@@ -426,6 +546,9 @@ export default function PhotoTimeline() {
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
+              <span className="absolute bottom-0.5 right-1 text-[9px] font-mono font-bold text-white bg-black/70 px-1 rounded">
+                {photo.id}
+              </span>
             </button>
           ))}
         </div>
