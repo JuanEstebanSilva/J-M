@@ -12,6 +12,8 @@ import VocabularySection from './components/VocabularySection.jsx';
 import MemoriesSection  from './components/MemoriesSection.jsx';
 import LoveWrapped      from './components/LoveWrapped.jsx';
 import MomentsGallery   from './components/MomentsGallery.jsx';
+import FloatingParticles from './components/FloatingParticles.jsx';
+import AudioPlayerButton from './components/AudioPlayerButton.jsx';
 
 // ─── Parse & compute analytics once (memoized) ───────────────────────────────
 function useAnalytics() {
@@ -32,13 +34,13 @@ function useAnalytics() {
 function ErrorScreen({ message }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4"
-      style={{ background: '#0a0a0f' }}
+      style={{ background: '#08080d' }}
     >
-      <div className="text-5xl">💔</div>
-      <h1 className="font-display text-3xl text-white/90">Algo salió mal</h1>
-      <p className="text-sm text-muted max-w-md text-center">{message}</p>
-      <p className="text-xs text-muted/60 max-w-md text-center">
-        Asegúrate de que el archivo <code className="font-mono text-wine-400 bg-white/5 px-1.5 py-0.5 rounded">src/data/_chat.txt</code> existe y contiene el historial exportado de WhatsApp.
+      <div className="text-6xl animate-bounce">💔</div>
+      <h1 className="font-display text-4xl text-white font-bold">Algo salió mal</h1>
+      <p className="text-base text-rose-300 max-w-md text-center">{message}</p>
+      <p className="text-sm text-white/60 max-w-md text-center">
+        Asegúrate de que el archivo <code className="font-mono text-wine-400 bg-white/10 px-2 py-1 rounded">src/data/_chat.txt</code> existe y contiene el historial exportado de WhatsApp.
       </p>
     </div>
   );
@@ -46,12 +48,21 @@ function ErrorScreen({ message }) {
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 function Dashboard({ analytics, onOpenWrapped }) {
+  const [p1 = 'Juanes', p2 = 'Pau'] = analytics.participants;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
     >
+      {/* Ambient background particles (hearts, stars, dust) */}
+      <FloatingParticles />
+
+      {/* Floating Audio Player Button */}
+      <AudioPlayerButton />
+
+      {/* Navbar */}
       <Navbar names={analytics.participants} onOpenWrapped={onOpenWrapped} />
 
       {/* Global ambient glows */}
@@ -65,38 +76,41 @@ function Dashboard({ analytics, onOpenWrapped }) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <MomentsGallery />
 
-          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
+          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
           <CoupleStats      analytics={analytics} />
 
-          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
+          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
           <ActivityCharts   analytics={analytics} />
 
-          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(144,96,255,0.3), rgba(200,35,96,0.4), transparent)' }} />
+          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
           <VocabularySection analytics={analytics} />
 
-          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
+          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
           <MemoriesSection  analytics={analytics} />
         </div>
 
         {/* Footer */}
-        <footer className="text-center py-16 px-4">
-          <div className="h-px mb-10 max-w-xs mx-auto" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.3), transparent)' }} />
+        <footer className="text-center py-20 px-4">
+          <div className="h-1 mb-12 max-w-md mx-auto shimmer-line rounded-full opacity-50" />
           <motion.div
-            className="text-3xl mb-3 select-none"
-            animate={{ scale: [1, 1.1, 1] }}
+            className="text-4xl mb-4 select-none cursor-pointer"
+            animate={{ scale: [1, 1.18, 1] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           >
-            ♥
+            💖
           </motion.div>
-          <p className="font-display text-lg italic" style={{ color: 'rgba(200,35,96,0.7)' }}>
-            Nuestra historia, siempre.
+          <h3 className="font-display text-2xl sm:text-3xl font-bold gradient-text mb-2">
+            {p1} &amp; {p2}
+          </h3>
+          <p className="font-display text-lg italic text-rose-300/90 max-w-md mx-auto">
+            "Nuestra historia, escrita con amor en cada mensaje, siempre."
           </p>
-          <p className="text-xs text-muted mt-3">
-            {analytics.participants[0]} &amp; {analytics.participants[1] || '?'} · {analytics.daysTotal} días juntos
+          <p className="text-sm text-white/50 mt-4 font-mono">
+            {analytics.totalMessages?.toLocaleString('es-CO')} mensajes · {analytics.daysTotal} días juntos · Para toda la vida ♾️
           </p>
         </footer>
       </main>
@@ -120,7 +134,7 @@ export default function App() {
   if (error) return <ErrorScreen message={error} />;
 
   return (
-    <div style={{ background: '#0a0a0f', minHeight: '100vh' }}>
+    <div style={{ background: '#08080d', minHeight: '100vh' }}>
       <AnimatePresence mode="wait">
         {showWelcome && (
           <WelcomeScreen key="welcome" onDone={() => setShowWelcome(false)} />

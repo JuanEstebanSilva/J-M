@@ -7,7 +7,7 @@ export const COUPLE_PHOTOS = [
   {
     id: 1,
     src: photo1,
-    alt: 'Noche elegante juntos',
+    alt: 'Juntos en tu grado',
     caption: 'Elegancia y complicidad',
     subtitle: 'Nuestros mejores momentos vestidos de fiesta',
     tag: 'Elegancia 🥂',
@@ -16,7 +16,7 @@ export const COUPLE_PHOTOS = [
   {
     id: 2,
     src: photo2,
-    alt: 'Atardecer mágico junto al lago',
+    alt: 'Nuestra primera gran aventura',
     caption: 'Atardeceres que quitan el aliento',
     subtitle: 'Breathtaking — Donde el cielo se une con nuestro amor',
     tag: 'Atardecer 🌅',
@@ -25,7 +25,7 @@ export const COUPLE_PHOTOS = [
   {
     id: 3,
     src: photo3,
-    alt: 'Sonrisas compartidas en casa',
+    alt: 'Salidas a comer 24/7',
     caption: 'Nuestras sonrisas favoritas',
     subtitle: 'La paz y calidez de estar simplemente juntos',
     tag: 'Cómplices ✨',
@@ -34,7 +34,7 @@ export const COUPLE_PHOTOS = [
   {
     id: 4,
     src: photo4,
-    alt: 'Aventura en cuatrimoto en la montaña',
+    alt: 'Vueltas en la cuatri por miradores',
     caption: 'Aventuras inolvidables',
     subtitle: 'Recorriendo caminos y conquistando miradores juntos',
     tag: 'Aventura 🏔️',

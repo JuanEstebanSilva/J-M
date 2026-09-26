@@ -6,6 +6,8 @@ export default defineConfig({
   assetsInclude: ['**/*.txt'],
   server: {
     watch: {
+      usePolling: true,
+      interval: 1000,
       ignored: ['**/node_modules/**', '**/.git/**'],
     },
   },

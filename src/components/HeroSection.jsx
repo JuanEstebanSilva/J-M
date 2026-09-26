@@ -1,14 +1,15 @@
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, FileText, Image, Calendar, Sparkles } from 'lucide-react';
+import { MessageCircle, FileText, Image, Calendar, Sparkles, Clock, Heart } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CountUp, StatCard } from './ui.jsx';
 import { COUPLE_PHOTOS } from '../data/photos.js';
+import { playHeartChime } from '../utils/romanticAudio.js';
 
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 24 },
+  initial: { opacity: 0, y: 28 },
   animate: { opacity: 1, y: 0 },
-  transition: { delay, duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+  transition: { delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] },
 });
 
 function formatDate(date) {
@@ -20,234 +21,277 @@ function formatDate(date) {
 
 export default function HeroSection({ analytics, onOpenWrapped }) {
   const { participants, firstDate, lastDate, daysTotal, totalMessages, totalWords, totalMediaAll } = analytics;
-  const [p1, p2 = '?'] = participants;
+  const [p1 = 'Juanes', p2 = 'Pau'] = participants;
   const firedRef = useRef(false);
 
+  // Live love stopwatch
+  const [elapsed, setElapsed] = useState({ days: daysTotal || 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!firstDate) return;
+    const startDate = new Date(firstDate).getTime();
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diff = Math.max(0, now - startDate);
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setElapsed({ days, hours, minutes, seconds });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [firstDate, daysTotal]);
+
   const handleConfetti = () => {
+    playHeartChime();
     if (firedRef.current) return;
     firedRef.current = true;
     confetti({
-      particleCount: 120,
-      spread: 90,
+      particleCount: 140,
+      spread: 100,
       origin: { y: 0.55 },
       colors: ['#c82360', '#9060ff', '#f04080', '#ffd966', '#ff80ad'],
       shapes: ['circle', 'square'],
-      scalar: 1.1,
+      scalar: 1.15,
     });
-    setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 }, colors: ['#c82360', '#fff', '#9060ff'] }), 600);
-    setTimeout(() => { firedRef.current = false; }, 3000);
+    setTimeout(() => {
+      confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 }, colors: ['#c82360', '#fff', '#9060ff'] });
+    }, 450);
+    setTimeout(() => { firedRef.current = false; }, 2500);
   };
 
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-16 px-4"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-20 px-4"
     >
-      {/* Background mesh */}
+      {/* Background radiant mesh */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(at 20% 80%, rgba(136,11,58,0.25) 0%, transparent 50%),
-            radial-gradient(at 80% 20%, rgba(104,48,224,0.2) 0%, transparent 50%),
-            radial-gradient(at 60% 60%, rgba(200,35,96,0.08) 0%, transparent 40%),
-            #0a0a0f
+            radial-gradient(at 20% 75%, rgba(160, 16, 75, 0.32) 0%, transparent 55%),
+            radial-gradient(at 80% 25%, rgba(120, 60, 240, 0.25) 0%, transparent 55%),
+            radial-gradient(at 50% 50%, rgba(200, 35, 96, 0.12) 0%, transparent 50%),
+            #08080d
           `,
         }}
       />
 
-      {/* Stars/particles bg */}
+      {/* Twinkling romantic stars */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 40 }).map((_, i) => (
+        {Array.from({ length: 45 }).map((_, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              width: 1 + Math.random() * 2,
-              height: 1 + Math.random() * 2,
-              background: i % 3 === 0 ? 'rgba(200,35,96,0.6)' : i % 3 === 1 ? 'rgba(144,96,255,0.5)' : 'rgba(255,255,255,0.3)',
+              width: 1.5 + Math.random() * 2.5,
+              height: 1.5 + Math.random() * 2.5,
+              background: i % 3 === 0 ? 'rgba(255,217,102,0.8)' : i % 2 === 0 ? 'rgba(240,64,128,0.7)' : 'rgba(144,96,255,0.7)',
+              boxShadow: '0 0 6px rgba(255,255,255,0.8)',
             }}
-            animate={{ opacity: [0.2, 1, 0.2] }}
-            transition={{ duration: 2 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3, ease: 'easeInOut' }}
+            animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
+            transition={{ duration: 2.5 + Math.random() * 3.5, repeat: Infinity, delay: Math.random() * 3, ease: 'easeInOut' }}
           />
         ))}
       </div>
 
-      <div className="relative z-10 max-w-5xl w-full mx-auto text-center">
-        {/* Names */}
-        <motion.div {...fadeUp(0)} className="flex flex-col items-center gap-4 mb-10">
-          {/* Couple Portrait Avatar Frame */}
-          {COUPLE_PHOTOS[1] && (
-            <motion.div
-              className="relative cursor-pointer group mb-1"
-              onClick={() => document.getElementById('moments')?.scrollIntoView({ behavior: 'smooth' })}
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.96 }}
-              title="Ver nuestra galería de fotos"
-            >
-              <div
-                className="absolute -inset-1 rounded-full blur-md opacity-70 group-hover:opacity-100 transition-opacity"
-                style={{ background: 'conic-gradient(from 0deg, #880b3a, #c82360, #9060ff, #f04080, #880b3a)' }}
-              />
-              <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-white/50 shadow-glow-wine">
-                <img
-                  src={COUPLE_PHOTOS[1].src}
-                  alt="Juan & Pareja"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              </div>
-              <div
-                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-md border border-white/20 select-none"
-                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
-              >
-                ♥
-              </div>
-            </motion.div>
-          )}
-
-          <span className="section-label tracking-[0.3em]">✦ nuestra historia ✦</span>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <motion.span
-              className="font-display text-5xl md:text-7xl font-semibold"
-              style={{
-                background: 'linear-gradient(135deg, #fff 0%, #ffd0e0 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}
-              animate={{ opacity: [0.85, 1, 0.85] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              {p1}
-            </motion.span>
-            <motion.div
-              className="flex items-center justify-center"
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <span
-                className="text-4xl md:text-5xl select-none cursor-pointer"
-                style={{ filter: 'drop-shadow(0 0 12px rgba(200,35,96,0.6))' }}
-                onClick={handleConfetti}
-                title="¡Haz clic! 🎉"
-              >
-                ♥
-              </span>
-            </motion.div>
-            <motion.span
-              className="font-display text-5xl md:text-7xl font-semibold"
-              style={{
-                background: 'linear-gradient(135deg, #c0a0ff 0%, #fff 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}
-              animate={{ opacity: [0.85, 1, 0.85] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-            >
-              {p2}
-            </motion.span>
-          </div>
-          <p className="text-sm text-muted-soft font-light">
-            Desde{' '}
-            <span style={{ color: '#e05c82' }}>{formatDate(firstDate)}</span>
-            {' '}hasta{' '}
-            <span style={{ color: '#9060ff' }}>{formatDate(lastDate)}</span>
-          </p>
-        </motion.div>
-
-        {/* Days counter circle */}
-        <motion.div {...fadeUp(0.15)} className="flex justify-center mb-12">
-          <button
-            onClick={handleConfetti}
-            className="relative group"
-            aria-label="Celebrar nuestro amor"
+      <div className="relative z-10 max-w-5xl w-full mx-auto text-center flex flex-col items-center">
+        {/* Couple Portrait Avatar Frame */}
+        {COUPLE_PHOTOS[1] && (
+          <motion.div
+            {...fadeUp(0)}
+            className="relative cursor-pointer group mb-5"
+            onClick={() => document.getElementById('moments')?.scrollIntoView({ behavior: 'smooth' })}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+            title="Ver nuestra galería de fotos"
           >
-            {/* Outer glow ring */}
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{ background: 'conic-gradient(from 0deg, #880b3a, #c82360, #9060ff, #6830e0, #880b3a)', padding: 2 }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            >
-              <div className="w-full h-full rounded-full" style={{ background: '#0a0a0f' }} />
-            </motion.div>
-
             <div
-              className="relative w-52 h-52 md:w-64 md:h-64 rounded-full flex flex-col items-center justify-center gap-1 m-1"
-              style={{
-                background: 'radial-gradient(circle at 35% 35%, rgba(136,11,58,0.35), rgba(10,10,15,0.9))',
-                border: '1px solid rgba(200,35,96,0.15)',
-              }}
-            >
-              <span className="text-xs text-muted uppercase tracking-widest">llevamos juntos</span>
-              <CountUp
-                end={daysTotal}
-                duration={1800}
-                className="font-display text-6xl md:text-7xl font-bold gradient-text"
+              className="absolute -inset-1.5 rounded-full blur-lg opacity-75 group-hover:opacity-100 transition-opacity"
+              style={{ background: 'conic-gradient(from 0deg, #880b3a, #c82360, #ffd966, #9060ff, #f04080, #880b3a)' }}
+            />
+            <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-white/60 shadow-2xl">
+              <img
+                src={COUPLE_PHOTOS[1].src}
+                alt="Juanes & Pau"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />
-              <span className="text-sm text-muted-soft">días</span>
-              <span className="text-xs text-muted mt-1">Haz clic 🎉</span>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
             </div>
-          </button>
-        </motion.div>
-
-        {/* Love Wrapped launch button */}
-        {onOpenWrapped && (
-          <motion.div {...fadeUp(0.2)} className="flex justify-center -mt-6 mb-12">
-            <button
-              onClick={onOpenWrapped}
-              className="group relative px-6 py-3 rounded-full text-sm font-medium text-white flex items-center gap-2.5 transition-all duration-300 hover:scale-105 active:scale-95 shadow-glow-wine border border-rose-500/40 overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #880b3a 0%, #c82360 50%, #9060ff 100%)' }}
+            <div
+              className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full flex items-center justify-center text-base shadow-lg border-2 border-white/40 select-none"
+              style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Sparkles size={16} className="text-rose-200 animate-spin-slow" />
-              <span className="tracking-wide font-medium">✦ Ver Nuestro Love Wrapped ✦</span>
-              <span className="text-rose-200 group-hover:translate-x-1 transition-transform">→</span>
-            </button>
+              ❤️
+            </div>
           </motion.div>
         )}
 
-        {/* Quick stat cards */}
-        <motion.div {...fadeUp(0.25)} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {/* Section Pill */}
+        <motion.div {...fadeUp(0.05)} className="mb-4">
+          <span className="section-label text-xs sm:text-sm tracking-[0.3em] font-semibold py-1.5 px-4 shadow-lg">
+            ✦ NUESTRA HISTORIA DE AMOR ✦
+          </span>
+        </motion.div>
+
+        {/* Large Names: Juanes & Pau */}
+        <motion.div {...fadeUp(0.1)} className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 mb-4">
+          <motion.span
+            className="font-display text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 10%, #ffd0e0 60%, #c82360 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              filter: 'drop-shadow(0 4px 20px rgba(200,35,96,0.35))',
+            }}
+          >
+            {p1}
+          </motion.span>
+
+          <motion.div
+            className="flex items-center justify-center cursor-pointer select-none"
+            whileHover={{ scale: 1.25, rotate: 10 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleConfetti}
+            title="¡Toca para celebrar nuestro amor! 🎉"
+          >
+            <span
+              className="text-4xl sm:text-5xl md:text-6xl text-rose-500"
+              style={{ filter: 'drop-shadow(0 0 16px rgba(240,64,128,0.8))' }}
+            >
+              ♥
+            </span>
+          </motion.div>
+
+          <motion.span
+            className="font-display text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
+            style={{
+              background: 'linear-gradient(135deg, #ffffff 10%, #f0c0ff 60%, #9060ff 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              filter: 'drop-shadow(0 4px 20px rgba(144,96,255,0.35))',
+            }}
+          >
+            {p2}
+          </motion.span>
+        </motion.div>
+
+        {/* Date span */}
+        <motion.p {...fadeUp(0.15)} className="text-base sm:text-lg text-white/70 font-light mb-8 max-w-xl">
+          Escribiendo nuestra historia desde el{' '}
+          <strong className="text-rose-300 font-semibold">{formatDate(firstDate)}</strong>{' '}
+          hasta el{' '}
+          <strong className="text-violet-300 font-semibold">{formatDate(lastDate)}</strong>
+        </motion.p>
+
+        {/* Live Love Stopwatch */}
+        <motion.div
+          {...fadeUp(0.2)}
+          className="mb-10 w-full max-w-2xl px-4 py-4 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-2xl"
+          style={{ background: 'linear-gradient(135deg, rgba(30, 20, 45, 0.7), rgba(15, 10, 25, 0.8))' }}
+        >
+          <div className="flex items-center justify-center gap-2 mb-3 text-xs sm:text-sm font-semibold tracking-widest uppercase text-rose-300">
+            <Clock size={16} className="text-rose-400 animate-pulse" />
+            <span>Tiempo exacto amándonos</span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black gradient-text-rose block">
+                {elapsed.days}
+              </span>
+              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Días</span>
+            </div>
+
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black text-white block">
+                {String(elapsed.hours).padStart(2, '0')}
+              </span>
+              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Horas</span>
+            </div>
+
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black text-white block">
+                {String(elapsed.minutes).padStart(2, '0')}
+              </span>
+              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Minutos</span>
+            </div>
+
+            <div className="p-2 sm:p-3 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black gradient-text-gold block">
+                {String(elapsed.seconds).padStart(2, '0')}
+              </span>
+              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Segundos</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Love Wrapped Launch Button */}
+        {onOpenWrapped && (
+          <motion.div {...fadeUp(0.25)} className="mb-12">
+            <motion.button
+              onClick={() => {
+                playHeartChime();
+                onOpenWrapped();
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="glow-btn group text-base sm:text-lg font-bold px-8 sm:px-10 py-4"
+            >
+              <Sparkles size={20} className="text-yellow-300 animate-spin-slow" />
+              <span>✦ Ver Nuestro Love Wrapped ✦</span>
+              <span className="text-rose-200 group-hover:translate-x-1.5 transition-transform">→</span>
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* 4 Quick Stat Summary Cards with Bigger Numbers */}
+        <motion.div {...fadeUp(0.3)} className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 w-full">
           <StatCard
-            icon={<MessageCircle size={20} style={{ color: '#e05c82' }} />}
+            icon={<MessageCircle size={24} style={{ color: '#ff6699' }} />}
             label="Mensajes"
-            value={<CountUp end={totalMessages} duration={1500} />}
-            sub="enviados en total"
+            value={<CountUp end={totalMessages} duration={1600} />}
+            sub="enviados con amor"
             accent="wine"
           />
           <StatCard
-            icon={<FileText size={20} style={{ color: '#9060ff' }} />}
+            icon={<FileText size={24} style={{ color: '#b088ff' }} />}
             label="Palabras"
-            value={<CountUp end={totalWords} duration={1700} />}
+            value={<CountUp end={totalWords} duration={1800} />}
             sub="palabras escritas"
             accent="violet"
           />
           <StatCard
-            icon={<Image size={20} style={{ color: '#f04080' }} />}
-            label="Fotos & Audios"
-            value={<CountUp end={totalMediaAll} duration={1400} />}
-            sub="archivos compartidos"
+            icon={<Image size={24} style={{ color: '#ff5599' }} />}
+            label="Recuerdos"
+            value={<CountUp end={totalMediaAll} duration={1500} />}
+            sub="fotos, stickers y audios"
             accent="rose"
           />
           <StatCard
-            icon={<Calendar size={20} style={{ color: '#f0a800' }} />}
+            icon={<Calendar size={24} style={{ color: '#ffd966' }} />}
             label="Días juntos"
-            value={<CountUp end={daysTotal} duration={1600} />}
-            sub="de historia compartida"
+            value={<CountUp end={daysTotal} duration={1700} />}
+            sub="de complicidad total"
             accent="gold"
           />
         </motion.div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Downward scroll indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-        animate={{ y: [0, 8, 0], opacity: [0.4, 0.9, 0.4] }}
+        className="mt-14 flex flex-col items-center gap-1 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
+        onClick={() => document.getElementById('moments')?.scrollIntoView({ behavior: 'smooth' })}
+        animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <span className="text-xs text-muted tracking-wider">Desliza</span>
-        <div className="w-px h-8" style={{ background: 'linear-gradient(180deg, rgba(200,35,96,0.6), transparent)' }} />
+        <span className="text-xs text-white/60 tracking-widest uppercase font-semibold">Desliza para ver más</span>
+        <div className="w-0.5 h-10 rounded-full" style={{ background: 'linear-gradient(180deg, #c82360, transparent)' }} />
       </motion.div>
     </section>
   );

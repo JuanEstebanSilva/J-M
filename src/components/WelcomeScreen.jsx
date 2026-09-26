@@ -103,9 +103,9 @@ export default function WelcomeScreen({ onDone }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <p className="section-label text-sm tracking-[0.3em]">✦ un regalo para nosotros ✦</p>
+          <p className="section-label text-sm tracking-[0.3em]">✦ UN REGALO DE AMOR ✦</p>
           <h1
-            className="font-display text-5xl md:text-6xl font-semibold leading-tight"
+            className="font-display text-5xl md:text-7xl font-bold leading-tight"
             style={{
               background: 'linear-gradient(135deg, #fff 0%, #ffd0e0 40%, #c0a0ff 80%, #fff 100%)',
               WebkitBackgroundClip: 'text',
@@ -113,20 +113,20 @@ export default function WelcomeScreen({ onDone }) {
               backgroundClip: 'text',
             }}
           >
-            Nuestra Historia
+            Juanes &amp; Pau
           </h1>
           <h2
-            className="font-display text-3xl md:text-4xl font-light italic"
-            style={{ color: 'rgba(200,35,96,0.85)' }}
+            className="font-display text-2xl md:text-3xl font-light italic"
+            style={{ color: 'rgba(240,64,128,0.9)' }}
           >
-            en Datos
+            Nuestra Historia en Datos ✨
           </h2>
         </motion.div>
 
         {/* Decorative line */}
         <motion.div
-          className="h-px w-48 mx-auto"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.6), rgba(144,96,255,0.4), transparent)' }}
+          className="h-1 w-56 mx-auto rounded-full"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.8), rgba(144,96,255,0.6), transparent)' }}
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.9 }}
@@ -134,12 +134,12 @@ export default function WelcomeScreen({ onDone }) {
 
         {/* Subtitle */}
         <motion.p
-          className="text-sm text-muted-soft font-light tracking-wide max-w-xs"
+          className="text-base text-white/80 font-light tracking-wide max-w-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.85, duration: 0.8 }}
         >
-          Cargando cada momento, cada palabra, cada "te amo"…
+          Cargando cada momento, cada sonrisa y cada "te amo"…
         </motion.p>
 
         {/* Loading dots */}

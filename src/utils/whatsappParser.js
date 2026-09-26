@@ -100,9 +100,12 @@ export function parseWhatsApp(rawText) {
       }
       const [, dateStr, timeStr, authorRaw, textRaw] = m;
       const date = parseDate(dateStr, timeStr);
-      const author = authorRaw.trim();
+      const rawAuthor = authorRaw.trim();
+      const author = /maria\s*paula/i.test(rawAuthor) || /mi\s*amor/i.test(rawAuthor) || /^pau$/i.test(rawAuthor)
+        ? 'Pau'
+        : (/juan/i.test(rawAuthor) ? 'Juanes' : rawAuthor);
       const text = textRaw.trim();
-      current = { date, author, text, raw: line };
+      current = { date, author, text, raw: line, originalAuthor: rawAuthor };
     } else if (current) {
       // Multi-line message continuation
       current.text += '\n' + line;

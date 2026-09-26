@@ -40,7 +40,7 @@ export default function Navbar({ names, onOpenWrapped }) {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const title = names?.length >= 2 ? `${names[0]} & ${names[1]}` : 'Nuestra Historia';
+  const title = names?.length >= 2 ? `${names[0]} & ${names[1]}` : 'Juanes & Pau';
 
   return (
     <>
