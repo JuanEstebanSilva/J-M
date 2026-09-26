@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-blossom-burgundy antialiased;
+    background: linear-gradient(160deg, #FDF8F5 0%, #F9EEE7 40%, #F2D5C8 70%, #E8B4B8 100%);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-blossom-petal;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-blossom-rose rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-blossom-mauve;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md rounded-3xl shadow-glass border border-white/60;
+  }
+
+  .blossom-card {
+    @apply bg-gradient-to-br from-white/90 to-blossom-petal/80 backdrop-blur-sm rounded-3xl shadow-card border border-white/70;
+  }
+
+  .wine-btn {
+    @apply bg-gradient-to-r from-blossom-wine to-blossom-burgundy text-white font-sans font-medium px-6 py-3 rounded-full shadow-blossom transition-all duration-300 hover:shadow-blossom-lg hover:scale-105 active:scale-95;
+  }
+
+  .section-title {
+    @apply font-display text-3xl md:text-4xl text-blossom-plum font-semibold;
+  }
+
+  .stat-number {
+    @apply font-display text-4xl md:text-5xl font-bold text-blossom-wine;
+  }
+
+  .label-text {
+    @apply font-sans text-sm text-blossom-mauve uppercase tracking-widest font-medium;
+  }
+}
+
+@layer utilities {
+  .text-gradient-wine {
+    @apply bg-gradient-to-r from-blossom-wine to-blossom-apricot bg-clip-text text-transparent;
+  }
+
+  .text-gradient-blossom {
+    @apply bg-gradient-to-r from-blossom-burgundy via-blossom-mauve to-blossom-peach bg-clip-text text-transparent;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, 
+      rgba(255,255,255,0) 0%, 
+      rgba(255,255,255,0.4) 50%, 
+      rgba(255,255,255,0) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+/* Flower petals decoration */
+.petal-decoration::before,
+.petal-decoration::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  opacity: 0.06;
+  background: radial-gradient(circle, #C07B8E, transparent);
+}
+
+/* Story overlay */
+.story-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(74, 22, 40, 0.0) 0%,
+    rgba(74, 22, 40, 0.3) 40%,
+    rgba(74, 22, 40, 0.8) 100%
+  );
+}
+
+/* Progress bar animation */
+@keyframes progress-fill {
+  from { width: 0% }
+  to { width: var(--target-width) }
+}
+
+.progress-animate {
+  animation: progress-fill 1.2s ease-out forwards;
+}
+
+/* Heartbeat animation */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.15); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+  56% { transform: scale(1); }
+}
+
+.heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Floating particles */
+@keyframes float-particle {
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+}
