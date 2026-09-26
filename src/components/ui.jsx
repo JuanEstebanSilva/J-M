@@ -125,14 +125,23 @@ export function ComparisonBar({ p1, p2, val1, val2, label, formatFn }) {
 }
 
 // ─── PolaroidMessage ──────────────────────────────────────────────────────────
-export function PolaroidMessage({ msg, author, date, isSent }) {
+export function PolaroidMessage({ msg, author, date, isSent, photo }) {
   const dateStr = date
     ? new Date(date).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
     : '';
 
   return (
-    <div className="flex flex-col gap-1.5 max-w-sm mx-auto">
-      <div className="text-xs text-muted text-center mb-1">{dateStr}</div>
+    <div className="flex flex-col gap-2 max-w-sm mx-auto">
+      {photo && (
+        <div className="w-full h-32 rounded-xl overflow-hidden border border-white/10 mb-1 relative shadow-md">
+          <img src={photo.src} alt={photo.alt} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute bottom-1.5 left-2 text-[10px] text-white/80 font-medium px-2 py-0.5 rounded-full bg-black/40 backdrop-blur-sm">
+            {photo.tag}
+          </div>
+        </div>
+      )}
+      <div className="text-xs text-muted text-center mb-0.5">{dateStr}</div>
       <div className={isSent ? 'flex justify-end' : 'flex justify-start'}>
         <div
           className="rounded-2xl px-5 py-4 text-sm leading-relaxed shadow-card max-w-xs"

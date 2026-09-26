@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { MessageCircle, FileText, Image, Calendar, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CountUp, StatCard } from './ui.jsx';
+import { COUPLE_PHOTOS } from '../data/photos.js';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 24 },
@@ -77,6 +78,36 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
       <div className="relative z-10 max-w-5xl w-full mx-auto text-center">
         {/* Names */}
         <motion.div {...fadeUp(0)} className="flex flex-col items-center gap-4 mb-10">
+          {/* Couple Portrait Avatar Frame */}
+          {COUPLE_PHOTOS[1] && (
+            <motion.div
+              className="relative cursor-pointer group mb-1"
+              onClick={() => document.getElementById('moments')?.scrollIntoView({ behavior: 'smooth' })}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.96 }}
+              title="Ver nuestra galería de fotos"
+            >
+              <div
+                className="absolute -inset-1 rounded-full blur-md opacity-70 group-hover:opacity-100 transition-opacity"
+                style={{ background: 'conic-gradient(from 0deg, #880b3a, #c82360, #9060ff, #f04080, #880b3a)' }}
+              />
+              <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border-2 border-white/50 shadow-glow-wine">
+                <img
+                  src={COUPLE_PHOTOS[1].src}
+                  alt="Juan & Pareja"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              </div>
+              <div
+                className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-md border border-white/20 select-none"
+                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+              >
+                ♥
+              </div>
+            </motion.div>
+          )}
+
           <span className="section-label tracking-[0.3em]">✦ nuestra historia ✦</span>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <motion.span

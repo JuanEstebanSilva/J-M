@@ -26,4 +26,3 @@ dist-ssr
 # Chat export & sensitive files
 *.txt
 _chat.txt
-src/data/

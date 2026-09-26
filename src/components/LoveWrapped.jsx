@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Heart, Pause, Play, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { COUPLE_PHOTOS } from '../data/photos.js';
 
 const SLIDE_DURATION = 5500; // ms per slide
 
@@ -85,21 +86,24 @@ function buildSlides(analytics) {
       id: 'opening',
       bg: 'from-[#2a0418] via-[#150520] to-[#0a0a0f]',
       content: (
-        <div className="flex flex-col items-center justify-center h-full text-center px-8">
+        <div className="flex flex-col items-center justify-center h-full text-center px-6">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-            className="text-7xl mb-6 select-none"
-            style={{ filter: 'drop-shadow(0 0 24px rgba(200,35,96,0.6))' }}
+            className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-rose-400/60 shadow-glow-wine mb-4 mx-auto"
           >
-            ❤️
+            <img src={COUPLE_PHOTOS[0]?.src || COUPLE_PHOTOS[1]?.src} alt="Nosotros" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-600 flex items-center justify-center text-xs text-white">
+              ♥
+            </div>
           </motion.div>
           <motion.p
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="section-label tracking-[0.3em] text-xs mb-3 text-rose-300"
+            className="section-label tracking-[0.3em] text-xs mb-2 text-rose-300"
           >
             ✦ NUESTRO LOVE WRAPPED ✦
           </motion.p>
@@ -107,7 +111,7 @@ function buildSlides(analytics) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="font-display text-4xl text-white font-bold mb-2 leading-tight"
+            className="font-display text-3xl sm:text-4xl text-white font-bold mb-1 leading-tight"
           >
             Nuestra Historia
           </motion.h2>
@@ -115,7 +119,7 @@ function buildSlides(analytics) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-display italic text-2xl text-wine-400 mb-8"
+            className="font-display italic text-xl text-wine-400 mb-6"
           >
             en cada mensaje
           </motion.p>
@@ -123,7 +127,7 @@ function buildSlides(analytics) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"
+            className="flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"
           >
             <span className="font-medium text-white/90 text-sm">{p1}</span>
             <span className="text-rose-500 animate-pulse text-xs">♥</span>
@@ -413,19 +417,24 @@ function buildSlides(analytics) {
       bg: 'from-[#2c1200] via-[#24081c] to-[#0a0a0f]',
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
-          <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-6xl mb-4"
-          >
-            🏆
-          </motion.div>
+          {COUPLE_PHOTOS[3] && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="relative w-36 h-24 rounded-2xl overflow-hidden border border-white/20 shadow-lg mb-3"
+            >
+              <img src={COUPLE_PHOTOS[3].src} alt="Récord" className="w-full h-full object-cover" />
+              <div className="absolute top-1.5 left-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/60 text-gold-300 backdrop-blur-md">
+                Aventuras 🏔️
+              </div>
+            </motion.div>
+          )}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-xs uppercase tracking-widest text-gold-400 mb-2"
+            className="text-xs uppercase tracking-widest text-gold-400 mb-1"
           >
             Su récord absoluto
           </motion.p>
@@ -509,19 +518,26 @@ function buildSlides(analytics) {
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-8">
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: [1, 1.15, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-            className="text-7xl mb-5 inline-block select-none"
-            style={{ filter: 'drop-shadow(0 0 30px rgba(200,35,96,0.8))' }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl overflow-hidden border-2 border-rose-400/70 shadow-glow-wine mb-4 mx-auto"
           >
-            💕
+            <img src={COUPLE_PHOTOS[1]?.src || COUPLE_PHOTOS[2]?.src} alt="Nuestro Amor" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center text-3xl select-none"
+              animate={{ scale: [1, 1.25, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              ♥
+            </motion.div>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="font-display text-3xl text-white font-bold mb-2"
+            className="font-display text-2xl sm:text-3xl text-white font-bold mb-1"
           >
             Y la historia continúa…
           </motion.h2>
@@ -529,7 +545,7 @@ function buildSlides(analytics) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="font-display italic text-lg text-rose-300 mb-8"
+            className="font-display italic text-base sm:text-lg text-rose-300 mb-6"
           >
             cada día, en cada mensaje
           </motion.p>
@@ -537,11 +553,11 @@ function buildSlides(analytics) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8 }}
-            className="flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-md"
+            className="flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md"
           >
-            <span className="font-display text-xl font-semibold text-white">{p1}</span>
-            <Heart className="w-5 h-5 text-rose-500 fill-rose-500 animate-pulse" />
-            <span className="font-display text-xl font-semibold text-white">{p2}</span>
+            <span className="font-display text-lg font-semibold text-white">{p1}</span>
+            <Heart className="w-4 h-4 text-rose-500 fill-rose-500 animate-pulse" />
+            <span className="font-display text-lg font-semibold text-white">{p2}</span>
           </motion.div>
         </div>
       ),

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Shuffle, Calendar } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Section, PolaroidMessage } from './ui.jsx';
+import { COUPLE_PHOTOS } from '../data/photos.js';
 
 function formatDate(date) {
   if (!date) return '—';
@@ -155,16 +156,21 @@ export default function MemoriesSection({ analytics }) {
                     author={randomMsg.author}
                     date={randomMsg.date}
                     isSent={isSent}
+                    photo={COUPLE_PHOTOS[msgIndex % COUPLE_PHOTOS.length]}
                   />
                 </motion.div>
               ) : (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center"
+                  className="text-center flex flex-col items-center gap-3 py-2"
                 >
-                  <div className="text-4xl mb-3">💬</div>
-                  <p className="text-sm text-muted italic">
+                  {COUPLE_PHOTOS[2] && (
+                    <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shadow-md">
+                      <img src={COUPLE_PHOTOS[2].src} alt="Memorias" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <p className="text-xs sm:text-sm text-muted italic">
                     Haz clic en el botón para revivir<br />un mensaje aleatorio de nuestra historia
                   </p>
                 </motion.div>

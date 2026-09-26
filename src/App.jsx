@@ -11,6 +11,7 @@ import ActivityCharts   from './components/ActivityCharts.jsx';
 import VocabularySection from './components/VocabularySection.jsx';
 import MemoriesSection  from './components/MemoriesSection.jsx';
 import LoveWrapped      from './components/LoveWrapped.jsx';
+import MomentsGallery   from './components/MomentsGallery.jsx';
 
 // ─── Parse & compute analytics once (memoized) ───────────────────────────────
 function useAnalytics() {
@@ -62,6 +63,10 @@ function Dashboard({ analytics, onOpenWrapped }) {
         <HeroSection analytics={analytics} onOpenWrapped={onOpenWrapped} />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <MomentsGallery />
+
+          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
+
           <CoupleStats      analytics={analytics} />
 
           <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
