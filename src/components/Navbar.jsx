@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, BarChart2, Clock, Sparkles, Menu, X, Image as ImageIcon } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { href: '#hero',       label: 'Inicio',     icon: Heart },
-  { href: '#moments',    label: 'Momentos',   icon: ImageIcon },
-  { href: '#couple',     label: 'Dinamómetros', icon: BarChart2 },
-  { href: '#activity',   label: 'Hábitos',    icon: Clock },
-  { href: '#vocabulary', label: 'Palabras',   icon: Sparkles },
-  { href: '#memories',   label: 'Memorias',   icon: Heart },
+  { href: '#hero',           label: 'Inicio',       icon: Heart },
+  { href: '#moments',        label: 'Momentos',     icon: ImageIcon },
+  { href: '#deep-analytics', label: 'Radiografía',  icon: Sparkles },
+  { href: '#couple',         label: 'Métricas',     icon: BarChart2 },
+  { href: '#activity',       label: 'Hábitos',      icon: Clock },
+  { href: '#vocabulary',     label: 'Palabras',     icon: Sparkles },
+  { href: '#memories',       label: 'Memorias',     icon: Heart },
 ];
 
 export default function Navbar({ names, onOpenWrapped }) {

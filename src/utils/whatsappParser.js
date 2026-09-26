@@ -208,6 +208,13 @@ export function computeAnalytics(messages) {
   const lastDate   = sortedMsgs[sortedMsgs.length - 1].date;
   const daysTotal  = Math.max(1, Math.round((lastDate - firstDate) / (1000 * 60 * 60 * 24)));
 
+  // ─── Official Relationship Anniversary: 28 de Febrero de 2020 ──────────────
+  const anniversaryDate = new Date(2020, 1, 28);
+  const now = new Date();
+  const diffAnniversaryMs = Math.max(0, now.getTime() - anniversaryDate.getTime());
+  const daysTogetherAnniversary = Math.floor(diffAnniversaryMs / (1000 * 60 * 60 * 24));
+  const yearsTogether = (daysTogetherAnniversary / 365.25).toFixed(1);
+
   // Per-author stats
   const stats = {};
   for (const p of participants) {
@@ -221,9 +228,37 @@ export function computeAnalytics(messages) {
     };
   }
 
-  // Media counters
+  // Media counters & detailed media breakdown
   const MEDIA_RE = /\.(jpg|jpeg|png|gif|mp4|mp3|ogg|opus|webp|pdf|doc)|(imagen|audio|video|sticker|documento|gif)\s+omitid/i;
   let totalMedia = { [p1]: 0, [p2]: 0 };
+
+  const mediaBreakdown = {
+    [p1]: { stickers: 0, photos: 0, audios: 0, videos: 0, total: 0 },
+    [p2]: { stickers: 0, photos: 0, audios: 0, videos: 0, total: 0 },
+  };
+
+  // Calls analytics
+  const callsStats = {
+    totalCalls: 0,
+    answeredCalls: 0,
+    missedCalls: 0,
+    totalMinutes: 0,
+    byAuthor: {
+      [p1]: { calls: 0, minutes: 0 },
+      [p2]: { calls: 0, minutes: 0 },
+    },
+  };
+
+  // Laughter count (jaja, jeje, 😂, 🤣, xd)
+  const laughterStats = { [p1]: 0, [p2]: 0, total: 0 };
+
+  // Time of day segments
+  const timeOfDayStats = {
+    nightOwls:  { [p1]: 0, [p2]: 0, total: 0 }, // 00:00 - 05:59
+    earlyBirds: { [p1]: 0, [p2]: 0, total: 0 }, // 06:00 - 09:59
+    daytime:    { [p1]: 0, [p2]: 0, total: 0 }, // 10:00 - 18:59
+    evening:    { [p1]: 0, [p2]: 0, total: 0 }, // 19:00 - 23:59
+  };
 
   // Daily message counts
   const dailyMap = {};
@@ -248,9 +283,70 @@ export function computeAnalytics(messages) {
     const s = stats[author];
     s.messages++;
 
+    // Calls detection & duration extraction
+    if (/^Llamada|^Videollamada|^Llamada de/i.test(text)) {
+      callsStats.totalCalls++;
+      if (/sin respuesta|cancelada|perdida/i.test(text)) {
+        callsStats.missedCalls++;
+      } else {
+        callsStats.answeredCalls++;
+        let mins = 0;
+        const hr = text.match(/(\d+)\s*(?:h|hr|hora)/i);
+        const min = text.match(/(\d+)\s*min/i);
+        const sec = text.match(/(\d+)\s*s/i);
+        if (hr) mins += parseInt(hr[1], 10) * 60;
+        if (min) mins += parseInt(min[1], 10);
+        if (sec && !hr && !min) mins += 1;
+
+        callsStats.totalMinutes += mins;
+        if (callsStats.byAuthor[author]) {
+          callsStats.byAuthor[author].calls++;
+          callsStats.byAuthor[author].minutes += mins;
+        }
+      }
+    }
+
+    // Media categorization
     const isMedia = MEDIA_RE.test(text);
     if (isMedia) {
       totalMedia[author] = (totalMedia[author] || 0) + 1;
+    }
+
+    if (/sticker\s+omitido|\.webp/i.test(text)) {
+      mediaBreakdown[author].stickers++;
+      mediaBreakdown[author].total++;
+    } else if (/imagen\s+omitida|\.(jpe?g|png)/i.test(text)) {
+      mediaBreakdown[author].photos++;
+      mediaBreakdown[author].total++;
+    } else if (/audio\s+omitido|\.(opus|mp3|ogg|m4a)/i.test(text)) {
+      mediaBreakdown[author].audios++;
+      mediaBreakdown[author].total++;
+    } else if (/video\s+omitido|\.mp4/i.test(text)) {
+      mediaBreakdown[author].videos++;
+      mediaBreakdown[author].total++;
+    }
+
+    // Laughter count
+    const laughs = (text.match(/jaja+|jeje+|jiji+|😂|🤣|xd|xdd+/gi) || []).length;
+    if (laughs > 0) {
+      laughterStats[author] = (laughterStats[author] || 0) + laughs;
+      laughterStats.total += laughs;
+    }
+
+    // Time of day classification
+    const hour = date.getHours();
+    if (hour >= 0 && hour < 6) {
+      timeOfDayStats.nightOwls[author]++;
+      timeOfDayStats.nightOwls.total++;
+    } else if (hour >= 6 && hour < 10) {
+      timeOfDayStats.earlyBirds[author]++;
+      timeOfDayStats.earlyBirds.total++;
+    } else if (hour >= 10 && hour < 19) {
+      timeOfDayStats.daytime[author]++;
+      timeOfDayStats.daytime.total++;
+    } else {
+      timeOfDayStats.evening[author]++;
+      timeOfDayStats.evening.total++;
     }
 
     // Word counts only for non-media text
@@ -372,11 +468,37 @@ export function computeAnalytics(messages) {
     (m) => m.text.length > 20 && !/omitid/i.test(m.text) && participants.includes(m.author)
   );
 
+  // Longest emotional letters (excluding source code pastes)
+  const loveLetters = sortedMsgs
+    .filter((m) =>
+      m.text.length > 250 &&
+      !/omitid|cifrado|import\s+React|function\s+|const\s+/i.test(m.text) &&
+      participants.includes(m.author)
+    )
+    .sort((a, b) => b.text.length - a.text.length)
+    .slice(0, 6)
+    .map((m) => ({
+      author: m.author,
+      text: m.text,
+      length: m.text.length,
+      words: m.text.split(/\s+/).length,
+      date: m.date,
+      dateStr: m.date.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+    }));
+
   return {
     participants,
     firstDate,
     lastDate,
     daysTotal,
+    anniversaryDate,
+    daysTogetherAnniversary,
+    yearsTogether,
+    callsStats,
+    mediaBreakdown,
+    laughterStats,
+    timeOfDayStats,
+    loveLetters,
     totalMessages,
     totalWords,
     totalMediaAll,

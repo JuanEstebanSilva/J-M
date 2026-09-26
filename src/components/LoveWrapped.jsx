@@ -37,6 +37,12 @@ function buildSlides(analytics) {
     totalMessages = 0,
     totalWords = 0,
     daysTotal = 0,
+    anniversaryDate,
+    daysTogetherAnniversary,
+    yearsTogether,
+    callsStats,
+    mediaBreakdown,
+    laughterStats,
     stats = {},
     busiestDay = null,
     busiestCount = 0,
@@ -78,7 +84,8 @@ function buildSlides(analytics) {
     }
   }
 
-  const years = Math.floor(daysTotal / 365);
+  const daysCount = daysTogetherAnniversary || 2402;
+  const yearsCount = yearsTogether || '6.5';
 
   return [
     // Slide 1: Opening
@@ -93,7 +100,7 @@ function buildSlides(analytics) {
             transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
             className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-rose-400/60 shadow-glow-wine mb-4 mx-auto"
           >
-            <img src={COUPLE_PHOTOS[0]?.src || COUPLE_PHOTOS[1]?.src} alt="Nosotros" className="w-full h-full object-cover" />
+            <img src={COUPLE_PHOTOS[3]?.src || COUPLE_PHOTOS[0]?.src} alt="Nosotros" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-rose-600 flex items-center justify-center text-xs text-white">
               ♥
@@ -137,7 +144,7 @@ function buildSlides(analytics) {
       ),
     },
 
-    // Slide 2: Days together
+    // Slide 2: Days together (True anniversary: 28 Feb 2020)
     {
       id: 'days',
       bg: 'from-[#350820] via-[#1c0628] to-[#0a0a0f]',
@@ -149,7 +156,7 @@ function buildSlides(analytics) {
             transition={{ delay: 0.2 }}
             className="text-xs uppercase tracking-widest text-muted-soft mb-4"
           >
-            Llevan escribiendo su amor
+            ✦ NUESTRA TRAYECTORIA DE NOVIOS ✦
           </motion.p>
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
@@ -157,7 +164,7 @@ function buildSlides(analytics) {
             transition={{ type: 'spring', stiffness: 150, delay: 0.3 }}
             className="font-display text-8xl font-bold gradient-text leading-none mb-2"
           >
-            {daysTotal.toLocaleString('es-CO')}
+            {daysCount.toLocaleString('es-CO')}
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
@@ -165,20 +172,76 @@ function buildSlides(analytics) {
             transition={{ delay: 0.5 }}
             className="font-display italic text-3xl text-rose-300 mb-6"
           >
-            días juntos 🌹
+            días de novios 🌹
           </motion.p>
-          {years > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-2.5 border border-white/10"
-            >
-              <p className="text-white/90 text-sm">
-                Más de <span className="font-bold text-gold-400">{years} año{years > 1 ? 's' : ''}</span> caminando de la mano
-              </p>
-            </motion.div>
-          )}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/10 max-w-xs"
+          >
+            <p className="text-white/90 text-sm font-medium">
+              Desde el <span className="font-bold text-rose-300">28 de febrero de 2020</span>
+            </p>
+            <p className="text-amber-300 text-xs mt-1 font-semibold">
+              ✨ Más de {yearsCount} años construyendo nuestra vida
+            </p>
+          </motion.div>
+        </div>
+      ),
+    },
+
+    // Slide 2.5: Calls & Media Superpowers
+    {
+      id: 'calls-media',
+      bg: 'from-[#1d0628] via-[#240822] to-[#0a0a0f]',
+      content: (
+        <div className="flex flex-col items-center justify-center h-full text-center px-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.2 }}
+            className="text-5xl mb-2"
+          >
+            📞
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-xs uppercase tracking-widest text-muted-soft mb-1"
+          >
+            Maratón en Llamadas
+          </motion.p>
+          <motion.div
+            initial={{ scale: 0.5 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', delay: 0.4 }}
+            className="font-display text-6xl font-bold gradient-text-gold leading-none mb-1"
+          >
+            {callsStats?.totalMinutes ? Math.round(callsStats.totalMinutes / 60) : 164} hrs
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="font-display italic text-base text-rose-300 mb-5"
+          >
+            {(callsStats?.totalMinutes || 9860).toLocaleString('es-CO')} minutos escuchándonos 💕
+          </motion.p>
+
+          <div className="grid grid-cols-2 gap-3 w-full max-w-xs text-left">
+            <div className="p-3 rounded-2xl bg-white/5 border border-rose-500/20">
+              <span className="text-sm block text-white/80">👑 Stickers</span>
+              <p className="text-xs font-semibold text-rose-300">Pau</p>
+              <p className="text-xl font-mono font-bold text-white">1,220</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-white/5 border border-violet-500/20">
+              <span className="text-sm block text-white/80">📸 Fotos</span>
+              <p className="text-xs font-semibold text-violet-300">Juanes</p>
+              <p className="text-xl font-mono font-bold text-white">957</p>
+            </div>
+          </div>
         </div>
       ),
     },

@@ -3,17 +3,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 import rawChat from './data/_chat.txt?raw';
 import { parseWhatsApp, computeAnalytics } from './utils/whatsappParser.js';
 
-import WelcomeScreen    from './components/WelcomeScreen.jsx';
-import Navbar           from './components/Navbar.jsx';
-import HeroSection      from './components/HeroSection.jsx';
-import CoupleStats      from './components/CoupleStats.jsx';
-import ActivityCharts   from './components/ActivityCharts.jsx';
-import VocabularySection from './components/VocabularySection.jsx';
-import MemoriesSection  from './components/MemoriesSection.jsx';
-import LoveWrapped      from './components/LoveWrapped.jsx';
-import MomentsGallery   from './components/MomentsGallery.jsx';
-import FloatingParticles from './components/FloatingParticles.jsx';
-import AudioPlayerButton from './components/AudioPlayerButton.jsx';
+import WelcomeScreen      from './components/WelcomeScreen.jsx';
+import Navbar             from './components/Navbar.jsx';
+import HeroSection        from './components/HeroSection.jsx';
+import MomentsGallery     from './components/MomentsGallery.jsx';
+import DeepAnalyticsSection from './components/DeepAnalyticsSection.jsx';
+import CoupleStats        from './components/CoupleStats.jsx';
+import ActivityCharts     from './components/ActivityCharts.jsx';
+import VocabularySection   from './components/VocabularySection.jsx';
+import MemoriesSection    from './components/MemoriesSection.jsx';
+import LoveWrapped        from './components/LoveWrapped.jsx';
+import FloatingParticles  from './components/FloatingParticles.jsx';
+import AudioPlayerButton  from './components/AudioPlayerButton.jsx';
 
 // ─── Parse & compute analytics once (memoized) ───────────────────────────────
 function useAnalytics() {
@@ -35,7 +36,7 @@ function ErrorScreen({ message }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4"
       style={{ background: '#08080d' }}
-    >
+  >
       <div className="text-6xl animate-bounce">💔</div>
       <h1 className="font-display text-4xl text-white font-bold">Algo salió mal</h1>
       <p className="text-base text-rose-300 max-w-md text-center">{message}</p>
@@ -78,6 +79,10 @@ function Dashboard({ analytics, onOpenWrapped }) {
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
 
+          <DeepAnalyticsSection analytics={analytics} />
+
+          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+
           <CoupleStats      analytics={analytics} />
 
           <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
@@ -110,7 +115,7 @@ function Dashboard({ analytics, onOpenWrapped }) {
             "Nuestra historia, escrita con amor en cada mensaje, siempre."
           </p>
           <p className="text-sm text-white/50 mt-4 font-mono">
-            {analytics.totalMessages?.toLocaleString('es-CO')} mensajes · {analytics.daysTotal} días juntos · Para toda la vida ♾️
+            {analytics.totalMessages?.toLocaleString('es-CO')} mensajes en este chat · {analytics.daysTogetherAnniversary || 2402} días de novios (desde el 28/02/2020) · Para toda la vida ♾️
           </p>
         </footer>
       </main>
