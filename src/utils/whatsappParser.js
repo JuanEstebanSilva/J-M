@@ -1,89 +1,87 @@
 /**
  * WhatsApp Chat Parser — Dark Romance Dashboard
- * Supports: iOS, Android, Android-dot, 12h/24h, AM/PM, multi-line, Spanish
+ * Supports: iOS, Android, Android-dot, 12h/24h, AM/PM, Spanish a. m./p. m., multi-line
  */
 
-// ─── System message patterns ──────────────────────────────────────────────────
-const SYSTEM_PATTERNS = [
-  /imagen omitida/i, /audio omitido/i, /video omitido/i, /sticker omitido/i,
-  /documento omitido/i, /gif omitido/i, /contact card omitted/i,
-  /image omitted/i, /audio omitted/i, /video omitted/i, /sticker omitted/i,
-  /document omitted/i, /gif omitted/i,
-  /\u200e?(los mensajes|messages) (y las llamadas|and calls)/i,
-  /cifrado de extremo a extremo/i, /end-to-end encrypted/i,
-  /llamada de voz perdida/i, /missed voice call/i,
-  /llamada de video perdida/i, /missed video call/i,
-  /llamada de voz/i, /voice call/i,
-  /llamada de video/i, /video call/i,
-  /te añadió/i, /te eliminó/i,
-  /cambió el (asunto|icono)/i, /changed the (subject|icon)/i,
-  /se unió mediante el enlace/i, /joined using this group/i,
-  /creó el grupo/i, /created the group/i,
-  /añadiste a/i, /you added/i,
-  /eliminaste a/i, /you removed/i,
-  /abandonaste el grupo/i, /you left/i,
-  /eliminó este mensaje/i, /deleted this message/i,
-  /este mensaje fue eliminado/i, /this message was deleted/i,
-  /\u200e/,  // LTR mark at start = system
+// ─── Clean invisible Unicode control characters ──────────────────────────────
+function cleanUnicode(str) {
+  if (!str) return '';
+  return str.replace(/[\u200E\u200F\u202A-\u202E\uFEFF\u200B-\u200D]/g, '');
+}
+
+// ─── Pure system announcements (not authored by either partner) ───────────────
+const PURE_SYSTEM_PATTERNS = [
+  /cifrados? de extremo a extremo/i,
+  /end-to-end encrypt/i,
+  /se uni[oó] mediante el enlace/i,
+  /joined using/i,
+  /cre[oó] el grupo/i,
+  /created group/i,
+  /cambi[oó] el (asunto|icono|la descripci[oó]n)/i,
+  /changed the (subject|icon|description)/i,
+  /te a[nñ]adi[oó]/i,
+  /te elimin[oó]/i,
+  /eliminaste a/i,
+  /a[nñ]adiste a/i,
+  /abandonaste el grupo/i,
+  /left the group/i,
+  /llamada de voz perdida/i,
+  /llamada de video perdida/i,
+  /missed (voice|video) call/i,
+  /este mensaje fue eliminado/i,
+  /elimin[oó] este mensaje/i,
+  /this message was deleted/i,
   /^null$/i,
 ];
 
-const isSystemMessage = (text) => {
+const isPureSystem = (text) => {
   if (!text || text.trim() === '') return true;
-  return SYSTEM_PATTERNS.some((p) => p.test(text.trim()));
+  return PURE_SYSTEM_PATTERNS.some((p) => p.test(text.trim()));
 };
 
-// ─── Regex patterns for message lines ─────────────────────────────────────────
-const PATTERNS = [
-  // iOS: [DD/MM/YY, HH:mm:ss] Name: Message
-  // iOS: [DD/MM/YY, HH:mm:ss a] Name: Message
-  /^\[(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?)\]\s*([^:]+?):\s*([\s\S]*)/i,
-  // Android: DD/MM/YYYY, HH:mm - Name: Message
-  /^(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}(?:\s*[ap]m)?) -\s*([^:]+?):\s*([\s\S]*)/i,
-  // Android dot: DD.MM.YYYY, HH:mm - Name: Message
-  /^(\d{1,2}\.\d{1,2}\.\d{2,4}),\s*(\d{1,2}:\d{2}(?:\s*[ap]m)?) -\s*([^:]+?):\s*([\s\S]*)/i,
-  // Android US: MM/DD/YYYY, HH:mm AM/PM - Name: Message
-  /^(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2}\s*[AP]M) -\s*([^:]+?):\s*([\s\S]*)/i,
-];
+// ─── Flexible Regex for WhatsApp Message Headers ──────────────────────────────
+// Supports:
+// [10/12/25, 3:30:00 a. m.] Name: Message
+// [10/12/25, 3:30:00] Name: Message
+// 10/12/25, 3:30 - Name: Message
+// 10.12.25, 3:30 - Name: Message
+const MSG_REGEX = /^(?:\[)?(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}),?\s+(\d{1,2}:\d{2}(?::\d{2})?(?:[\s\u202F\u00A0]*[ap]\.?\s*m\.?)?)(?:\])?(?:\s*-\s*|\s*:\s*|\s+)?([^:]+?):\s*([\s\S]*)$/i;
 
-const NEW_LINE_STARTS = [
-  /^\[\d{1,2}\/\d{1,2}\/\d{2,4},/,
-  /^\d{1,2}\/\d{1,2}\/\d{2,4},/,
-  /^\d{1,2}\.\d{1,2}\.\d{2,4},/,
-];
-
-const isNewMessage = (line) => NEW_LINE_STARTS.some((p) => p.test(line));
-
+// ─── Date & Time Parser ───────────────────────────────────────────────────────
 const parseDate = (dateStr, timeStr) => {
   try {
-    const d = dateStr.replace(/\./g, '/');
+    const d = dateStr.replace(/[.-]/g, '/');
     const parts = d.split('/');
     if (parts.length !== 3) return null;
     let [p0, p1, p2] = parts.map(Number);
     const year = p2 < 100 ? 2000 + p2 : p2;
-    // Assume DD/MM/YYYY
+    // Format is DD/MM/YYYY
     const day = p0, month = p1 - 1;
-    const t = timeStr.trim();
-    let [hStr, rest] = t.split(':');
-    let h = parseInt(hStr, 10);
-    let m = 0, s = 0;
-    if (rest) {
-      const isPM = /pm/i.test(rest);
-      const isAM = /am/i.test(rest);
-      const mStr = rest.replace(/[^0-9]/g, '').slice(0, 2);
-      const sStr = rest.replace(/[^0-9]/g, '').slice(2, 4);
-      m = parseInt(mStr, 10) || 0;
-      s = sStr ? parseInt(sStr, 10) : 0;
-      if (isPM && h !== 12) h += 12;
-      if (isAM && h === 12) h = 0;
-    }
+
+    // Normalize whitespace & narrow spaces, lowercase
+    const cleanTime = timeStr.replace(/[\u202F\u00A0\s]+/g, ' ').toLowerCase().trim();
+    const isPM = /p\.?\s*m\.?/i.test(cleanTime);
+    const isAM = /a\.?\s*m\.?/i.test(cleanTime);
+
+    const match = cleanTime.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (!match) return null;
+
+    let h = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const s = match[3] ? parseInt(match[3], 10) : 0;
+
+    if (isPM && h !== 12) h += 12;
+    if (isAM && h === 12) h = 0;
+
     const date = new Date(year, month, day, h, m, s);
     if (isNaN(date.getTime())) return null;
     return date;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
-// ─── Parse raw string ─────────────────────────────────────────────────────────
+// ─── Parse raw string into messages array ─────────────────────────────────────
 export function parseWhatsApp(rawText) {
   if (!rawText || typeof rawText !== 'string') return [];
 
@@ -92,41 +90,33 @@ export function parseWhatsApp(rawText) {
   let current = null;
 
   for (const rawLine of lines) {
-    const line = rawLine.replace(/\r$/, '');
+    const line = cleanUnicode(rawLine.replace(/\r$/, ''));
     if (!line.trim()) continue;
 
-    let matched = false;
-    for (const pat of PATTERNS) {
-      const m = line.match(pat);
-      if (m) {
-        // Save previous
-        if (current) messages.push(current);
-        const [, dateStr, timeStr, authorRaw, textRaw] = m;
-        const date = parseDate(dateStr, timeStr);
-        const author = authorRaw.trim().replace(/^\u200e/, '');
-        const text = textRaw.trim().replace(/^\u200e/, '');
-        current = { date, author, text, raw: line };
-        matched = true;
-        break;
+    const m = line.match(MSG_REGEX);
+    if (m) {
+      if (current && current.date && current.author && !isPureSystem(current.text)) {
+        messages.push(current);
       }
-    }
-
-    if (!matched && current) {
-      // Multi-line continuation
+      const [, dateStr, timeStr, authorRaw, textRaw] = m;
+      const date = parseDate(dateStr, timeStr);
+      const author = authorRaw.trim();
+      const text = textRaw.trim();
+      current = { date, author, text, raw: line };
+    } else if (current) {
+      // Multi-line message continuation
       current.text += '\n' + line;
-    } else if (!matched && !current) {
-      // Ignore pre-header garbage
     }
   }
-  if (current) messages.push(current);
 
-  // Filter invalid/system messages
-  return messages.filter(
-    (msg) => msg.date && msg.author && !isSystemMessage(msg.text)
-  );
+  if (current && current.date && current.author && !isPureSystem(current.text)) {
+    messages.push(current);
+  }
+
+  return messages;
 }
 
-// ─── Stop words (Spanish + common) ───────────────────────────────────────────
+// ─── Stop words (Spanish + chat common) ───────────────────────────────────────
 const STOPWORDS = new Set([
   'de','la','que','el','en','y','a','los','del','se','las','por','un','para',
   'con','no','una','su','al','lo','como','más','pero','sus','le','ya','o','este',
@@ -141,6 +131,7 @@ const STOPWORDS = new Set([
   'hola','ok','oye','claro','bueno','vale','entonces','ahora','aquí','hay',
   'acá','pa','na','nah','mm','jj','ja','je','jaja','jeje','xd','xDD',
   'emoji','sticker','gif','media','null','omitido','omitida',
+  'imagen','video','audio','foto','sticker',
   'aja','ah','oh','eh','em','um','uh',
 ]);
 
@@ -160,13 +151,32 @@ const LOVE_KEYWORDS = [
   { label: 'Bonita',    patterns: [/\bbonitoa?\b/gi] },
 ];
 
-// ─── Emoji extractor ──────────────────────────────────────────────────────────
-const EMOJI_RE = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+// ─── Emoji extractor with Intl.Segmenter & Skin tone filter ───────────────────
+const SKIN_TONES = new Set(['🏻', '🏼', '🏽', '🏾', '🏿']);
+let segmenter = null;
+try {
+  segmenter = new Intl.Segmenter('es', { granularity: 'grapheme' });
+} catch {
+  // Intl.Segmenter not supported in legacy environment
+}
+
 const extractEmojis = (text) => {
+  if (!text) return [];
+  if (segmenter) {
+    const list = [];
+    for (const { segment } of segmenter.segment(text)) {
+      if (/\p{Extended_Pictographic}/u.test(segment) && !SKIN_TONES.has(segment)) {
+        list.push(segment);
+      }
+    }
+    return list;
+  }
   const found = [];
   let m;
-  const re = new RegExp(EMOJI_RE.source, 'gu');
-  while ((m = re.exec(text)) !== null) found.push(m[0]);
+  const re = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+  while ((m = re.exec(text)) !== null) {
+    if (!SKIN_TONES.has(m[0])) found.push(m[0]);
+  }
   return found;
 };
 
@@ -189,11 +199,11 @@ export function computeAnalytics(messages) {
 
   if (participants.length < 1) return null;
 
-  const [p1, p2] = participants;
+  const [p1, p2 = participants[0]] = participants;
   const sortedMsgs = [...messages].sort((a, b) => a.date - b.date);
   const firstDate  = sortedMsgs[0].date;
   const lastDate   = sortedMsgs[sortedMsgs.length - 1].date;
-  const daysTotal  = Math.round((lastDate - firstDate) / (1000 * 60 * 60 * 24));
+  const daysTotal  = Math.max(1, Math.round((lastDate - firstDate) / (1000 * 60 * 60 * 24)));
 
   // Per-author stats
   const stats = {};
@@ -209,7 +219,7 @@ export function computeAnalytics(messages) {
   }
 
   // Media counters
-  const MEDIA_RE = /\.(jpg|jpeg|png|gif|mp4|mp3|ogg|opus|webp|pdf|doc)/i;
+  const MEDIA_RE = /\.(jpg|jpeg|png|gif|mp4|mp3|ogg|opus|webp|pdf|doc)|(imagen|audio|video|sticker|documento|gif)\s+omitid/i;
   let totalMedia = { [p1]: 0, [p2]: 0 };
 
   // Daily message counts
@@ -235,15 +245,23 @@ export function computeAnalytics(messages) {
     const s = stats[author];
     s.messages++;
 
-    const words = text.toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !STOPWORDS.has(w) && /[a-záéíóúüñ]/i.test(w));
-    const rawWords = text.split(/\s+/).filter(Boolean);
-    s.words += rawWords.length;
-    s.chars += text.length;
+    const isMedia = MEDIA_RE.test(text);
+    if (isMedia) {
+      totalMedia[author] = (totalMedia[author] || 0) + 1;
+    }
 
-    for (const w of words) {
-      const clean = w.replace(/[^a-záéíóúüñ]/gi, '');
-      if (clean.length > 2 && !STOPWORDS.has(clean)) {
-        s.wordFreq[clean] = (s.wordFreq[clean] || 0) + 1;
+    // Word counts only for non-media text
+    if (!/omitid/i.test(text)) {
+      const words = text.toLowerCase().split(/\s+/).filter((w) => w.length > 2 && !STOPWORDS.has(w) && /[a-záéíóúüñ]/i.test(w));
+      const rawWords = text.split(/\s+/).filter(Boolean);
+      s.words += rawWords.length;
+      s.chars += text.length;
+
+      for (const w of words) {
+        const clean = w.replace(/[^a-záéíóúüñ]/gi, '');
+        if (clean.length > 2 && !STOPWORDS.has(clean)) {
+          s.wordFreq[clean] = (s.wordFreq[clean] || 0) + 1;
+        }
       }
     }
 
@@ -258,11 +276,6 @@ export function computeAnalytics(messages) {
         const matches = text.match(pat) || [];
         s.loveWords[kw.label] += matches.length;
       }
-    }
-
-    // Media
-    if (MEDIA_RE.test(text) || /omitid/i.test(text)) {
-      totalMedia[author] = (totalMedia[author] || 0) + 1;
     }
 
     // Daily
@@ -309,7 +322,7 @@ export function computeAnalytics(messages) {
 
   // Busiest day
   const busiestDayEntry = Object.entries(dailyMap).sort((a, b) => b[1] - a[1])[0];
-  const busiestDay  = busiestDayEntry ? busiestDayEntry[0] : null;
+  const busiestDay   = busiestDayEntry ? busiestDayEntry[0] : null;
   const busiestCount = busiestDayEntry ? busiestDayEntry[1] : 0;
 
   // Monthly array sorted
@@ -334,13 +347,13 @@ export function computeAnalytics(messages) {
   // Top emojis per person
   const emojiTop = {
     [p1]: topN(new Map(Object.entries(stats[p1]?.emojis || {}))),
-    [p2]: topN(new Map(Object.entries(stats[p2]?.emojis || {}))),
+    [p2]: stats[p2] ? topN(new Map(Object.entries(stats[p2]?.emojis || {}))) : [],
   };
 
   // Top words per person
   const wordTop = {
     [p1]: topN(new Map(Object.entries(stats[p1]?.wordFreq || {})), 30),
-    [p2]: topN(new Map(Object.entries(stats[p2]?.wordFreq || {})), 30),
+    [p2]: stats[p2] ? topN(new Map(Object.entries(stats[p2]?.wordFreq || {})), 30) : [],
   };
 
   // Total messages
