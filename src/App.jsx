@@ -1,174 +1,129 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Heart, Sparkles, RotateCcw } from 'lucide-react';
-import DropZone from './components/DropZone.jsx';
-import Navbar from './components/Navbar.jsx';
-import HeroSection from './components/HeroSection.jsx';
-import CoupleStats from './components/CoupleStats.jsx';
-import ActivityCharts from './components/ActivityCharts.jsx';
-import VocabularySection from './components/VocabularySection.jsx';
-import MemoriesSection from './components/MemoriesSection.jsx';
-import LoveWrapped from './components/LoveWrapped.jsx';
-import { parseWhatsAppChat, computeAnalytics } from './utils/whatsappParser.js';
+import rawChat from './data/_chat.txt?raw';
+import { parseWhatsApp, computeAnalytics } from './utils/whatsappParser.js';
 
-function LoadingScreen() {
+import WelcomeScreen    from './components/WelcomeScreen.jsx';
+import Navbar           from './components/Navbar.jsx';
+import HeroSection      from './components/HeroSection.jsx';
+import CoupleStats      from './components/CoupleStats.jsx';
+import ActivityCharts   from './components/ActivityCharts.jsx';
+import VocabularySection from './components/VocabularySection.jsx';
+import MemoriesSection  from './components/MemoriesSection.jsx';
+
+// ─── Parse & compute analytics once (memoized) ───────────────────────────────
+function useAnalytics() {
+  return useMemo(() => {
+    try {
+      const messages = parseWhatsApp(rawChat);
+      if (!messages || messages.length === 0) return { error: 'No se encontraron mensajes.' };
+      const analytics = computeAnalytics(messages);
+      if (!analytics) return { error: 'No se pudieron calcular las estadísticas.' };
+      return { analytics };
+    } catch (err) {
+      return { error: err.message || 'Error al procesar el chat.' };
+    }
+  }, []);
+}
+
+// ─── Error screen ─────────────────────────────────────────────────────────────
+function ErrorScreen({ message }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-        className="w-16 h-16 rounded-full border-4 border-blossom-blush border-t-blossom-wine mb-6"
-      />
-      <p className="font-display italic text-xl text-blossom-mauve">
-        Analizando vuestra historia… 💕
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4"
+      style={{ background: '#0a0a0f' }}
+    >
+      <div className="text-5xl">💔</div>
+      <h1 className="font-display text-3xl text-white/90">Algo salió mal</h1>
+      <p className="text-sm text-muted max-w-md text-center">{message}</p>
+      <p className="text-xs text-muted/60 max-w-md text-center">
+        Asegúrate de que el archivo <code className="font-mono text-wine-400 bg-white/5 px-1.5 py-0.5 rounded">src/data/_chat.txt</code> existe y contiene el historial exportado de WhatsApp.
       </p>
     </div>
   );
 }
 
-function ErrorScreen({ message, onReset }) {
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+function Dashboard({ analytics }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="blossom-card p-10 text-center max-w-md">
-        <div className="text-5xl mb-4">😔</div>
-        <h2 className="font-display text-2xl text-blossom-burgundy mb-3">
-          No pudimos procesar el archivo
-        </h2>
-        <p className="font-sans text-blossom-mauve text-sm mb-6 leading-relaxed">{message}</p>
-        <button onClick={onReset} className="wine-btn flex items-center gap-2 mx-auto">
-          <RotateCcw className="w-4 h-4" />
-          Intentar de nuevo
-        </button>
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+    >
+      <Navbar names={analytics.participants} />
+
+      {/* Global ambient glows */}
+      <div className="glow-overlay top-left"    aria-hidden="true" />
+      <div className="glow-overlay top-right"   aria-hidden="true" />
+      <div className="glow-overlay bottom-center" aria-hidden="true" />
+
+      <main className="relative z-10">
+        <HeroSection      analytics={analytics} />
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <CoupleStats      analytics={analytics} />
+
+          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
+
+          <ActivityCharts   analytics={analytics} />
+
+          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(144,96,255,0.3), rgba(200,35,96,0.4), transparent)' }} />
+
+          <VocabularySection analytics={analytics} />
+
+          <div className="h-px my-4 opacity-30" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.4), rgba(144,96,255,0.3), transparent)' }} />
+
+          <MemoriesSection  analytics={analytics} />
+        </div>
+
+        {/* Footer */}
+        <footer className="text-center py-16 px-4">
+          <div className="h-px mb-10 max-w-xs mx-auto" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.3), transparent)' }} />
+          <motion.div
+            className="text-3xl mb-3"
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            ♥
+          </motion.div>
+          <p className="font-display text-lg italic" style={{ color: 'rgba(200,35,96,0.7)' }}>
+            Nuestra historia, siempre.
+          </p>
+          <p className="text-xs text-muted mt-3">
+            {analytics.participants[0]} &amp; {analytics.participants[1] || '?'} · {analytics.daysTotal} días juntos
+          </p>
+        </footer>
+      </main>
+    </motion.div>
   );
 }
 
+// ─── App root ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [rawText, setRawText] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
-  const [error, setError] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [wrappedOpen, setWrappedOpen] = useState(false);
+  const { analytics, error } = useAnalytics();
 
-  const handleFileLoad = useCallback((text) => {
-    setIsProcessing(true);
-    setError(null);
+  // Welcome screen: show for 2.8s then fade to dashboard
+  const [showWelcome, setShowWelcome] = useState(true);
 
-    // Use setTimeout to allow UI to update before heavy parsing
-    setTimeout(() => {
-      try {
-        const messages = parseWhatsAppChat(text);
-
-        if (messages.length < 10) {
-          setError(
-            `Solo se detectaron ${messages.length} mensajes. Asegúrate de que el archivo sea un export de WhatsApp (.txt) con el formato correcto.`
-          );
-          setIsProcessing(false);
-          return;
-        }
-
-        const result = computeAnalytics(messages);
-
-        if (!result || !result.participants?.length) {
-          setError('No se pudieron detectar participantes. Verifica que el chat tenga al menos dos personas.');
-          setIsProcessing(false);
-          return;
-        }
-
-        setAnalytics(result);
-        setRawText(text);
-      } catch (err) {
-        console.error('Parse error:', err);
-        setError('Error inesperado al procesar el archivo: ' + err.message);
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 100);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowWelcome(false), 2800);
+    return () => clearTimeout(timer);
   }, []);
 
-  const handleReset = useCallback(() => {
-    setRawText(null);
-    setAnalytics(null);
-    setError(null);
-    setWrappedOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  // Show drop zone
-  if (!analytics && !isProcessing && !error) {
-    return <DropZone onFileLoad={handleFileLoad} />;
-  }
-
-  if (isProcessing) return <LoadingScreen />;
-
-  if (error) return <ErrorScreen message={error} onReset={handleReset} />;
+  if (error) return <ErrorScreen message={error} />;
 
   return (
-    <div className="min-h-screen">
-      <Navbar
-        onWrappedOpen={() => setWrappedOpen(true)}
-        onReset={handleReset}
-      />
-
-      {/* Main dashboard */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-20">
-        <section id="hero" className="mb-16">
-          <HeroSection analytics={analytics} />
-        </section>
-
-        <CoupleStats analytics={analytics} />
-        <ActivityCharts analytics={analytics} />
-        <VocabularySection analytics={analytics} />
-        <MemoriesSection analytics={analytics} />
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-blossom-blush/50 bg-white/40 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Heart className="w-4 h-4 text-blossom-wine" fill="#8B3A52" />
-            <span className="font-display italic text-blossom-mauve text-sm">
-              Hecho con amor, procesado con privacidad
-            </span>
-          </div>
-          <p className="font-sans text-xs text-blossom-rose/70">
-            Ningún dato abandona tu navegador · Love Wrapped
-          </p>
-          <button
-            onClick={handleReset}
-            className="mt-4 font-sans text-xs text-blossom-mauve/60 hover:text-blossom-wine transition-colors flex items-center gap-1 mx-auto"
-          >
-            <RotateCcw className="w-3 h-3" />
-            Cargar otro chat
-          </button>
-        </div>
-      </footer>
-
-      {/* Floating Love Wrapped button */}
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1, type: 'spring', stiffness: 200 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setWrappedOpen(true)}
-        className="fixed bottom-6 right-6 z-30 wine-btn flex items-center gap-2 shadow-blossom-lg"
-      >
-        <Sparkles className="w-4 h-4" />
-        <span className="hidden sm:inline">Love Wrapped</span>
-        <span className="sm:hidden">✨</span>
-      </motion.button>
-
-      {/* Love Wrapped Modal */}
-      <AnimatePresence>
-        {wrappedOpen && (
-          <LoveWrapped
-            analytics={analytics}
-            onClose={() => setWrappedOpen(false)}
-          />
+    <div style={{ background: '#0a0a0f', minHeight: '100vh' }}>
+      <AnimatePresence mode="wait">
+        {showWelcome && (
+          <WelcomeScreen key="welcome" onDone={() => setShowWelcome(false)} />
         )}
       </AnimatePresence>
+
+      {/* Dashboard always rendered, but initially invisible under welcome */}
+      {analytics && !showWelcome && (
+        <Dashboard analytics={analytics} />
+      )}
     </div>
   );
 }

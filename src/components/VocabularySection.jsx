@@ -3,35 +3,118 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Smile } from 'lucide-react';
 import { Section, CountUp } from './ui.jsx';
 
-function WordCloud({ words }) {
-  if (!words?.length) return null;
+// ─── Love keyword grid ────────────────────────────────────────────────────────
+function LoveKeywords({ loveWordsTotals, p1, p2 }) {
+  const entries = Object.entries(loveWordsTotals)
+    .filter(([, v]) => v.total > 0)
+    .sort((a, b) => b[1].total - a[1].total);
 
-  const max = words[0]?.count || 1;
+  if (entries.length === 0) {
+    return <p className="text-sm text-muted italic">No se encontraron palabras de cariño frecuentes.</p>;
+  }
+
+  const max = entries[0][1].total;
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center py-4">
-      {words.slice(0, 50).map(({ key, count }, i) => {
-        const size = 0.7 + (count / max) * 1.3;
-        const opacity = 0.5 + (count / max) * 0.5;
-        const colors = [
-          'text-blossom-plum', 'text-blossom-wine', 'text-blossom-mauve',
-          'text-blossom-burgundy', 'text-blossom-apricot',
-        ];
-        const color = colors[i % colors.length];
+    <div className="space-y-3">
+      {entries.map(([label, data], i) => {
+        const pct = Math.round((data.total / max) * 100);
+        return (
+          <motion.div
+            key={label}
+            className="group"
+            initial={{ opacity: 0, x: -16 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.06, duration: 0.5 }}
+          >
+            <div className="flex items-center justify-between mb-1.5 gap-3">
+              <span className="text-sm font-medium text-white/80 min-w-[70px]">{label}</span>
+              <div className="flex-1 relative h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <motion.div
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{ background: 'linear-gradient(90deg, #880b3a, #c82360, #f04080)' }}
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${pct}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.1, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                />
+              </div>
+              <div className="flex gap-3 min-w-[100px] text-right">
+                <span className="text-xs text-muted">{p1}: <span style={{ color: '#e05c82' }}>{data[p1] || 0}</span></span>
+                <span className="text-xs text-muted">{p2}: <span style={{ color: '#b090ff' }}>{data[p2] || 0}</span></span>
+              </div>
+              <span className="text-sm font-mono font-bold text-white/90 min-w-[32px] text-right">{data.total}</span>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
 
+// ─── Emoji podium ─────────────────────────────────────────────────────────────
+function EmojiPodium({ emojiTop, name, color }) {
+  if (!emojiTop || emojiTop.length === 0) {
+    return <p className="text-xs text-muted italic">Sin emojis registrados.</p>;
+  }
+
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+
+  return (
+    <div className="space-y-2">
+      <h4 className="text-xs uppercase tracking-wider text-muted mb-3">{name}</h4>
+      {emojiTop.map(([emoji, count], i) => (
+        <motion.div
+          key={emoji}
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: -10 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: i * 0.08, duration: 0.4 }}
+        >
+          <span className="text-base w-5">{medals[i]}</span>
+          <span className="text-2xl leading-none">{emoji}</span>
+          <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: color }}
+              initial={{ width: 0 }}
+              whileInView={{ width: `${Math.round((count / emojiTop[0][1]) * 100)}%` }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+            />
+          </div>
+          <span className="text-xs font-mono text-white/60 min-w-[36px] text-right">{count.toLocaleString('es-CO')}</span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Word cloud ───────────────────────────────────────────────────────────────
+function WordCloud({ wordTop, color }) {
+  if (!wordTop || wordTop.length === 0) {
+    return <p className="text-xs text-muted italic">Sin palabras frecuentes.</p>;
+  }
+  const max = wordTop[0][1];
+  const sizes = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl'];
+
+  return (
+    <div className="flex flex-wrap gap-2 items-center">
+      {wordTop.map(([word, count]) => {
+        const norm = count / max;
+        const sizeIdx = Math.min(Math.floor(norm * sizes.length), sizes.length - 1);
+        const opacity = 0.4 + norm * 0.6;
         return (
           <motion.span
-            key={key}
-            initial={{ opacity: 0, scale: 0 }}
-            whileInView={{ opacity, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.02, type: 'spring', stiffness: 200 }}
-            whileHover={{ scale: 1.2, opacity: 1 }}
-            title={`${count} veces`}
-            className={`font-display font-medium cursor-default transition-all ${color}`}
-            style={{ fontSize: `${size}rem` }}
+            key={word}
+            className={`${sizes[sizeIdx]} font-medium cursor-default select-none`}
+            style={{ color, opacity }}
+            whileHover={{ scale: 1.15, opacity: 1 }}
+            title={`${word}: ${count}x`}
           >
-            {key}
+            {word}
           </motion.span>
         );
       })}
@@ -39,179 +122,108 @@ function WordCloud({ words }) {
   );
 }
 
-function EmojiPodium({ topEmojis, name }) {
-  if (!topEmojis?.length) return null;
-
-  const medals = ['🥇', '🥈', '🥉', '4', '5'];
-  const heights = ['h-24', 'h-16', 'h-12', 'h-10', 'h-8'];
-
-  return (
-    <div>
-      <p className="label-text mb-4 text-center">{name}</p>
-      <div className="flex items-end justify-center gap-3 mb-3">
-        {topEmojis.slice(0, 5).map(({ key: emoji, count }, i) => (
-          <motion.div
-            key={emoji}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, type: 'spring', stiffness: 200 }}
-            whileHover={{ scale: 1.1 }}
-            className="flex flex-col items-center gap-1"
-          >
-            <span className="font-mono text-xs text-blossom-mauve">{count}×</span>
-            <div
-              className={`${heights[i]} w-12 md:w-14 rounded-t-2xl flex items-end justify-center pb-2 bg-gradient-to-b from-blossom-blush/60 to-blossom-rose/30 border border-white/60 shadow-card`}
-            >
-              <span className="text-2xl">{emoji}</span>
-            </div>
-            <span className="text-sm">{medals[i]}</span>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function LoveKeywordCard({ label, count, delay }) {
-  const isHigh = count > 50;
-  const isMedium = count > 10;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay, type: 'spring', stiffness: 200 }}
-      whileHover={{ scale: 1.05, y: -2 }}
-      className={`
-        blossom-card p-4 text-center relative overflow-hidden
-        ${isHigh ? 'border border-blossom-wine/30' : ''}
-      `}
-    >
-      {isHigh && (
-        <div className="absolute -top-3 -right-3 text-3xl opacity-20 rotate-12 pointer-events-none">❤️</div>
-      )}
-      <div className="font-display text-3xl font-bold text-blossom-wine mb-1">
-        <CountUp to={count} duration={1500} />
-      </div>
-      <div className="font-sans text-sm text-blossom-mauve">"{label}"</div>
-      {isHigh && (
-        <div className="mt-2 flex justify-center">
-          {Array.from({ length: Math.min(5, Math.floor(count / 20)) }).map((_, i) => (
-            <span key={i} className="text-xs">❤️</span>
-          ))}
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function VocabularySection({ analytics }) {
-  const { participants, perAuthor, wordCloud, loveKeywords } = analytics;
-  const [activeTab, setActiveTab] = useState(participants[0]);
+  const { participants, stats, loveWordsTotals } = analytics;
+  const [p1, p2 = '?'] = participants;
+  const s1 = stats[p1];
+  const s2 = stats[p2];
+  const [wordTab, setWordTab] = useState(p1);
 
-  const currentData = perAuthor[activeTab] || {};
+  const totalLove = Object.values(loveWordsTotals).reduce((sum, v) => sum + v.total, 0);
 
   return (
-    <Section
-      id="vocabulary"
-      title="Vocabulario y afecto"
-      subtitle="Las palabras que construyen vuestra historia"
-      icon={Heart}
-    >
-      <div className="space-y-6">
-        {/* Love keywords grid */}
+    <Section id="vocabulary" label="Amor en Palabras" title="Lo que nuestro chat dice de nosotros">
+      <div className="space-y-5">
+        {/* Love keywords */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="blossom-card p-6"
+          className="glass-card p-6"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6 }}
         >
-          <h3 className="font-display text-xl text-blossom-burgundy mb-2">💌 Contador de amor</h3>
-          <p className="font-sans text-sm text-blossom-mauve mb-5">Cuántas veces lo dijeron entre los dos</p>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {Object.entries(loveKeywords)
-              .sort(([, a], [, b]) => b - a)
-              .map(([label, count], i) => (
-                <LoveKeywordCard
-                  key={label}
-                  label={label}
-                  count={count}
-                  delay={i * 0.06}
-                />
-              ))}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(200,35,96,0.12)' }}>
+                <Heart size={17} style={{ color: '#e05c82' }} />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-medium text-white/90">Contador de Cariño</h3>
+                <p className="text-xs text-muted">Palabras de amor detectadas</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-display text-2xl font-bold gradient-text">
+                <CountUp end={totalLove} duration={1400} />
+              </div>
+              <div className="text-xs text-muted">en total</div>
+            </div>
           </div>
+          <LoveKeywords loveWordsTotals={loveWordsTotals} p1={p1} p2={p2} />
         </motion.div>
 
-        {/* Top emojis */}
+        {/* Emoji podiums */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
-          className="blossom-card p-6"
+          className="glass-card p-6"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="flex items-center gap-2 mb-6">
-            <Smile className="w-5 h-5 text-blossom-gold" />
-            <h3 className="font-display text-xl text-blossom-burgundy">Top emojis por persona</h3>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(144,96,255,0.12)' }}>
+              <Smile size={17} style={{ color: '#b090ff' }} />
+            </div>
+            <h3 className="font-display text-lg font-medium text-white/90">Podio de Emojis</h3>
           </div>
-
           <div className="grid md:grid-cols-2 gap-8">
-            {participants.map(p => (
-              <EmojiPodium
-                key={p}
-                name={p}
-                topEmojis={perAuthor[p]?.topEmojis}
-              />
-            ))}
+            <EmojiPodium emojiTop={s1?.emojiTop || []} name={p1} color="linear-gradient(135deg, #c82360, #f04080)" />
+            <EmojiPodium emojiTop={s2?.emojiTop || []} name={p2} color="linear-gradient(135deg, #6830e0, #9060ff)" />
           </div>
         </motion.div>
 
-        {/* Word cloud */}
+        {/* Word clouds */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="blossom-card p-6"
+          className="glass-card p-6"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }}
         >
-          <h3 className="font-display text-xl text-blossom-burgundy mb-2">☁️ Nube de palabras</h3>
-          <p className="font-sans text-sm text-blossom-mauve mb-2">Términos más repetidos (sin stopwords)</p>
+          <h3 className="font-display text-lg font-medium text-white/90 mb-2">Palabras más usadas</h3>
+          <p className="text-xs text-muted mb-4">Términos más repetidos (sin stopwords en español)</p>
 
-          {/* Tab selector */}
-          <div className="flex gap-2 mb-5">
-            {['Ambos', ...participants].map(tab => (
+          {/* Tab switch */}
+          <div className="flex gap-1 p-1 rounded-xl mb-5 w-fit" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            {[p1, p2].map((name) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`
-                  font-sans text-sm px-4 py-2 rounded-full transition-all duration-200
-                  ${activeTab === tab
-                    ? 'bg-gradient-to-r from-blossom-wine to-blossom-burgundy text-white shadow-blossom'
-                    : 'bg-blossom-blush/50 text-blossom-mauve hover:bg-blossom-blush'
-                  }
-                `}
+                key={name}
+                onClick={() => setWordTab(name)}
+                className="relative px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 truncate max-w-[120px]"
+                style={{ color: wordTab === name ? '#fff' : 'rgba(255,255,255,0.45)' }}
               >
-                {tab}
+                {wordTab === name && (
+                  <motion.span
+                    layoutId="word-tab"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ background: wordTab === p1
+                      ? 'linear-gradient(135deg, rgba(136,11,58,0.5), rgba(200,35,96,0.35))'
+                      : 'linear-gradient(135deg, rgba(104,48,224,0.4), rgba(144,96,255,0.3))'
+                    }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <span className="relative">{name}</span>
               </button>
             ))}
           </div>
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeTab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              key={wordTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
             >
               <WordCloud
-                words={activeTab === 'Ambos'
-                  ? wordCloud
-                  : perAuthor[activeTab]?.topWords
-                }
+                wordTop={wordTab === p1 ? (s1?.wordTop || []) : (s2?.wordTop || [])}
+                color={wordTab === p1 ? '#e05c82' : '#b090ff'}
               />
             </motion.div>
           </AnimatePresence>

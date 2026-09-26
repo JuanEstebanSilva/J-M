@@ -1,0 +1,165 @@
+import { motion } from 'framer-motion';
+
+const PARTICLES = Array.from({ length: 12 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: 2 + Math.random() * 4,
+  delay: Math.random() * 3,
+  duration: 3 + Math.random() * 4,
+}));
+
+const HEARTS = ['♡', '♥', '💕', '✦', '⋆'];
+
+export default function WelcomeScreen({ onDone }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0a0a0f 0%, #0f0a14 40%, #14091a 70%, #0a0a0f 100%)' }}
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.03 }}
+      transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+    >
+      {/* Ambient glows */}
+      <div className="absolute inset-0 pointer-events-none">
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            top: '10%', left: '15%',
+            width: 500, height: 500,
+            background: 'radial-gradient(circle, rgba(136,11,58,0.2) 0%, transparent 65%)',
+          }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute rounded-full"
+          style={{
+            bottom: '10%', right: '10%',
+            width: 400, height: 400,
+            background: 'radial-gradient(circle, rgba(104,48,224,0.18) 0%, transparent 65%)',
+          }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+        />
+      </div>
+
+      {/* Floating particles */}
+      {PARTICLES.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+            background: p.id % 2 === 0
+              ? 'rgba(200,35,96,0.5)'
+              : 'rgba(144,96,255,0.4)',
+          }}
+          animate={{ y: [-20, 20, -20], opacity: [0, 0.8, 0] }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {/* Floating heart chars */}
+      {HEARTS.map((h, i) => (
+        <motion.span
+          key={i}
+          className="absolute text-lg select-none pointer-events-none"
+          style={{
+            left: `${15 + i * 16}%`,
+            color: i % 2 === 0 ? 'rgba(200,35,96,0.35)' : 'rgba(144,96,255,0.3)',
+          }}
+          animate={{ y: [-40, 40], opacity: [0, 0.6, 0] }}
+          transition={{ duration: 4 + i * 0.5, repeat: Infinity, delay: i * 0.4, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {/* Main content */}
+      <div className="relative z-10 text-center px-8 flex flex-col items-center gap-6">
+        {/* Heart icon */}
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.7, type: 'spring', stiffness: 200 }}
+        >
+          <motion.div
+            className="w-20 h-20 rounded-full flex items-center justify-center text-4xl shadow-glow-wine"
+            style={{ background: 'linear-gradient(135deg, #880b3a, #c82360, #9060ff)' }}
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            ♥
+          </motion.div>
+        </motion.div>
+
+        {/* Title */}
+        <motion.div
+          className="flex flex-col items-center gap-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="section-label text-sm tracking-[0.3em]">✦ un regalo para nosotros ✦</p>
+          <h1
+            className="font-display text-5xl md:text-6xl font-semibold leading-tight"
+            style={{
+              background: 'linear-gradient(135deg, #fff 0%, #ffd0e0 40%, #c0a0ff 80%, #fff 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Nuestra Historia
+          </h1>
+          <h2
+            className="font-display text-3xl md:text-4xl font-light italic"
+            style={{ color: 'rgba(200,35,96,0.85)' }}
+          >
+            en Datos
+          </h2>
+        </motion.div>
+
+        {/* Decorative line */}
+        <motion.div
+          className="h-px w-48 mx-auto"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.6), rgba(144,96,255,0.4), transparent)' }}
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.9 }}
+        />
+
+        {/* Subtitle */}
+        <motion.p
+          className="text-sm text-muted-soft font-light tracking-wide max-w-xs"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.85, duration: 0.8 }}
+        >
+          Cargando cada momento, cada palabra, cada "te amo"…
+        </motion.p>
+
+        {/* Loading dots */}
+        <motion.div
+          className="flex gap-2 items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.0 }}
+        >
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: 'rgba(200,35,96,0.7)' }}
+              animate={{ scale: [1, 1.6, 1], opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: 'easeInOut' }}
+            />
+          ))}
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}

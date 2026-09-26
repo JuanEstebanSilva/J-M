@@ -1,41 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
 
-/**
- * Animated counter that counts up from 0 to the target value.
- */
-export function CountUp({ to, duration = 1500, prefix = '', suffix = '', decimals = 0, className = '' }) {
-  const [count, setCount] = useState(0);
+// ─── CountUp ──────────────────────────────────────────────────────────────────
+export function CountUp({ end, duration = 1500, prefix = '', suffix = '', decimals = 0, className = '' }) {
+  const [value, setValue] = useState(0);
   const frameRef = useRef(null);
-  const startTimeRef = useRef(null);
 
   useEffect(() => {
-    if (typeof to !== 'number') return;
+    if (end === 0 || end === null || end === undefined) return;
+    const start = 0;
+    const startTime = performance.now();
 
-    const animate = (timestamp) => {
-      if (!startTimeRef.current) startTimeRef.current = timestamp;
-      const progress = Math.min((timestamp - startTimeRef.current) / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.floor(eased * to));
-
-      if (progress < 1) {
-        frameRef.current = requestAnimationFrame(animate);
-      } else {
-        setCount(to);
-      }
+    const update = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out-cubic
+      const current = start + (end - start) * eased;
+      setValue(parseFloat(current.toFixed(decimals)));
+      if (progress < 1) frameRef.current = requestAnimationFrame(update);
     };
 
-    frameRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
-      startTimeRef.current = null;
-    };
-  }, [to, duration]);
+    frameRef.current = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [end, duration, decimals]);
 
   const formatted = decimals > 0
-    ? count.toFixed(decimals)
-    : count.toLocaleString('es-ES');
+    ? value.toFixed(decimals)
+    : Math.round(value).toLocaleString('es-CO');
 
   return (
     <span className={className}>
@@ -44,159 +34,139 @@ export function CountUp({ to, duration = 1500, prefix = '', suffix = '', decimal
   );
 }
 
-/**
- * Stat card with animated number, label and icon.
- */
-export function StatCard({ icon: Icon, label, value, suffix = '', prefix = '', color = 'wine', delay = 0, children }) {
-  const colorMap = {
-    wine: 'from-blossom-wine to-blossom-burgundy',
-    peach: 'from-blossom-apricot to-blossom-peach',
-    mauve: 'from-blossom-mauve to-blossom-rose',
-    sage: 'from-blossom-sage to-emerald-400',
-    gold: 'from-blossom-gold to-yellow-400',
+// ─── StatCard ─────────────────────────────────────────────────────────────────
+export function StatCard({ icon, label, value, sub, accent = 'wine', className = '' }) {
+  const accentMap = {
+    wine:   'rgba(200,35,96,0.12)',
+    violet: 'rgba(144,96,255,0.12)',
+    rose:   'rgba(240,64,128,0.12)',
+    gold:   'rgba(240,168,0,0.12)',
+  };
+  const borderMap = {
+    wine:   'rgba(200,35,96,0.2)',
+    violet: 'rgba(144,96,255,0.2)',
+    rose:   'rgba(240,64,128,0.2)',
+    gold:   'rgba(240,168,0,0.2)',
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="blossom-card p-6 relative overflow-hidden group"
+    <div
+      className={`relative rounded-2xl p-5 flex flex-col gap-2 transition-all duration-300 hover:-translate-y-1 ${className}`}
+      style={{
+        background: accentMap[accent] || accentMap.wine,
+        border: `1px solid ${borderMap[accent] || borderMap.wine}`,
+        backdropFilter: 'blur(12px)',
+      }}
     >
-      {/* Background decoration */}
-      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-blossom-rose/10 group-hover:bg-blossom-rose/20 transition-all duration-500" />
-
-      <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br ${colorMap[color]} mb-4 shadow-blossom`}>
-        {Icon && <Icon className="w-5 h-5 text-white" />}
+      <div className="flex items-center justify-between">
+        <span className="text-2xl">{icon}</span>
       </div>
-
-      <div className="stat-number mb-1">
-        {typeof value === 'number' ? (
-          <CountUp to={value} prefix={prefix} suffix={suffix} />
-        ) : (
-          <span>{prefix}{value}{suffix}</span>
-        )}
-      </div>
-
-      <div className="label-text">{label}</div>
-
-      {children && <div className="mt-3">{children}</div>}
-    </motion.div>
+      <div className="text-2xl font-bold text-white font-mono">{value}</div>
+      <div className="text-xs font-medium text-muted-soft uppercase tracking-wider">{label}</div>
+      {sub && <div className="text-xs text-muted mt-0.5">{sub}</div>}
+    </div>
   );
 }
 
-/**
- * Section wrapper with title and optional subtitle.
- */
-export function Section({ title, subtitle, icon: Icon, children, id, className = '' }) {
+// ─── Section ──────────────────────────────────────────────────────────────────
+export function Section({ id, label, title, children, className = '' }) {
   return (
-    <section id={id} className={`mb-16 ${className}`}>
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center gap-3 mb-8"
-      >
-        {Icon && (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blossom-wine to-blossom-burgundy flex items-center justify-center shadow-blossom flex-shrink-0">
-            <Icon className="w-5 h-5 text-white" />
-          </div>
+    <section id={id} className={`py-16 ${className}`}>
+      <div className="mb-10">
+        {label && <p className="section-label mb-2">{label}</p>}
+        {title && (
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-white/90">
+            {title}
+          </h2>
         )}
-        <div>
-          <h2 className="section-title leading-tight">{title}</h2>
-          {subtitle && <p className="font-sans text-sm text-blossom-mauve mt-0.5">{subtitle}</p>}
-        </div>
-      </motion.div>
+        <div className="mt-4 h-px w-16 shimmer-line rounded-full" />
+      </div>
       {children}
     </section>
   );
 }
 
-/**
- * Comparison bar for two participants.
- */
-export function ComparisonBar({ p1Name, p1Value, p2Name, p2Value, total, label, formatValue }) {
-  const p1Pct = Math.round((p1Value / total) * 100);
-  const p2Pct = 100 - p1Pct;
-  const fmt = formatValue || ((v) => v.toLocaleString('es-ES'));
+// ─── ComparisonBar ────────────────────────────────────────────────────────────
+export function ComparisonBar({ p1, p2, val1, val2, label, formatFn }) {
+  const total = val1 + val2 || 1;
+  const pct1  = Math.round((val1 / total) * 100);
+  const pct2  = 100 - pct1;
+  const fmt   = formatFn || ((v) => v.toLocaleString('es-CO'));
 
   return (
-    <div className="mb-4">
-      {label && <p className="label-text mb-2">{label}</p>}
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="font-sans text-xs text-blossom-burgundy font-medium w-24 truncate">{p1Name}</span>
-        <div className="flex-1 h-3 rounded-full bg-blossom-blush overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            whileInView={{ width: `${p1Pct}%` }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-            className="h-full rounded-full bg-gradient-to-r from-blossom-wine to-blossom-mauve"
+    <div className="space-y-2">
+      {label && <p className="text-xs text-muted-soft uppercase tracking-wider">{label}</p>}
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-white/80 w-24 truncate text-right">{p1}</span>
+        <div className="flex-1 flex gap-1 items-center">
+          <div
+            className="h-2.5 rounded-l-full transition-all duration-1000"
+            style={{
+              width: `${pct1}%`,
+              background: 'linear-gradient(90deg, #880b3a, #c82360)',
+            }}
+          />
+          <div
+            className="h-2.5 rounded-r-full transition-all duration-1000"
+            style={{
+              width: `${pct2}%`,
+              background: 'linear-gradient(90deg, #6830e0, #9060ff)',
+            }}
           />
         </div>
-        <span className="font-mono text-xs text-blossom-wine font-medium w-20 text-right">{p1Pct}% · {fmt(p1Value)}</span>
+        <span className="text-sm font-medium text-white/80 w-24 truncate">{p2}</span>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="font-sans text-xs text-blossom-burgundy font-medium w-24 truncate">{p2Name}</span>
-        <div className="flex-1 h-3 rounded-full bg-blossom-blush overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            whileInView={{ width: `${p2Pct}%` }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, ease: 'easeOut', delay: 0.4 }}
-            className="h-full rounded-full bg-gradient-to-r from-blossom-peach to-blossom-apricot"
-          />
-        </div>
-        <span className="font-mono text-xs text-blossom-apricot font-medium w-20 text-right">{p2Pct}% · {fmt(p2Value)}</span>
+      <div className="flex justify-between text-xs text-muted">
+        <span>{fmt(val1)} <span className="text-white/30">({pct1}%)</span></span>
+        <span className="text-white/30">{fmt(val2)} ({pct2}%)</span>
       </div>
     </div>
   );
 }
 
-/**
- * Polaroid-style message card.
- */
-export function PolaroidMessage({ message, onShuffle }) {
-  if (!message) return null;
-
-  const dateStr = message.date?.toLocaleDateString('es-ES', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  });
+// ─── PolaroidMessage ──────────────────────────────────────────────────────────
+export function PolaroidMessage({ msg, author, date, isSent }) {
+  const dateStr = date
+    ? new Date(date).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
 
   return (
-    <motion.div
-      key={message.text.slice(0, 20)}
-      initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-      animate={{ opacity: 1, scale: 1, rotate: -1 }}
-      exit={{ opacity: 0, scale: 0.9, rotate: 2 }}
-      whileHover={{ rotate: 0, scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="relative bg-white shadow-blossom-lg rounded-sm p-5 pb-12 mx-auto max-w-sm cursor-pointer"
-      style={{
-        filter: 'drop-shadow(0 8px 24px rgba(139, 58, 82, 0.15))',
-        transformOrigin: 'center bottom',
-      }}
-      onClick={onShuffle}
-    >
-      {/* Photo area (top) */}
-      <div className="w-full h-2 bg-gradient-to-r from-blossom-rose/20 to-blossom-peach/20 rounded-sm mb-4" />
-
-      {/* Message */}
-      <blockquote className="font-display italic text-blossom-plum text-lg leading-relaxed min-h-[5rem] flex items-center">
-        "{message.text.length > 200 ? message.text.slice(0, 200) + '…' : message.text}"
-      </blockquote>
-
-      {/* Footer */}
-      <div className="absolute bottom-3 left-5 right-5 flex items-center justify-between">
-        <p className="font-sans text-xs text-blossom-mauve font-medium">{message.author}</p>
-        <p className="font-mono text-xs text-blossom-rose/70">{dateStr}</p>
+    <div className="flex flex-col gap-1.5 max-w-sm mx-auto">
+      <div className="text-xs text-muted text-center mb-1">{dateStr}</div>
+      <div className={isSent ? 'flex justify-end' : 'flex justify-start'}>
+        <div
+          className="rounded-2xl px-5 py-4 text-sm leading-relaxed shadow-card max-w-xs"
+          style={
+            isSent
+              ? { background: 'linear-gradient(135deg, rgba(136,11,58,0.55), rgba(200,35,96,0.45))', border: '1px solid rgba(200,35,96,0.25)' }
+              : { background: 'rgba(37,37,53,0.8)', border: '1px solid rgba(255,255,255,0.06)' }
+          }
+        >
+          <p className="text-white/90">{msg}</p>
+        </div>
       </div>
+      <div className={`text-xs text-muted ${isSent ? 'text-right' : 'text-left'} px-2`}>
+        {author}
+      </div>
+    </div>
+  );
+}
 
-      {/* Tape decoration */}
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-5 bg-blossom-blush/80 rounded-sm opacity-70" />
-    </motion.div>
+// ─── Loading shimmer ──────────────────────────────────────────────────────────
+export function Shimmer({ className = '' }) {
+  return (
+    <div
+      className={`rounded-xl animate-pulse ${className}`}
+      style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.08), rgba(255,255,255,0.04))' }}
+    />
+  );
+}
+
+// ─── Divider ──────────────────────────────────────────────────────────────────
+export function Divider() {
+  return (
+    <div className="relative flex items-center py-2">
+      <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(200,35,96,0.3), rgba(144,96,255,0.2), transparent)' }} />
+    </div>
   );
 }

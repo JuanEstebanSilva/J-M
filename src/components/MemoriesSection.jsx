@@ -1,143 +1,190 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Hourglass, RefreshCw, Trophy } from 'lucide-react';
+import { Trophy, Shuffle, Calendar } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { Section, PolaroidMessage } from './ui.jsx';
 
-export default function MemoriesSection({ analytics }) {
-  const { busiestDay, allMessages, randomMessage: getRandomMsg } = analytics;
-  const [currentMessage, setCurrentMessage] = useState(() => getRandomMsg());
-
-  const shuffle = useCallback(() => {
-    setCurrentMessage(getRandomMsg());
-  }, [getRandomMsg]);
-
-  const busiestDate = busiestDay?.date?.toLocaleDateString('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+function formatDate(date) {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('es-CO', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
+}
 
-  // Find the most active month
-  const monthlyByVolume = analytics.monthlyTimeline?.sort((a, b) => b.total - a.total)?.[0];
+function formatDateShort(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return new Date(Number(y), Number(m) - 1, Number(d))
+    .toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+export default function MemoriesSection({ analytics }) {
+  const { busiestDay, busiestCount, msgPool, participants, monthlyData, dailyMap } = analytics;
+  const [p1, p2 = '?'] = participants;
+  const [randomMsg, setRandomMsg]   = useState(null);
+  const [msgIndex, setMsgIndex]     = useState(0);
+  const [confettiFired, setConfettiFired] = useState(false);
+
+  // Busiest month
+  const busiestMonth = monthlyData?.reduce((a, b) => (b.total > a.total ? b : a), monthlyData[0]);
+
+  const pickRandom = useCallback(() => {
+    if (!msgPool || msgPool.length === 0) return;
+    const pool = msgPool.filter((m) => m !== randomMsg);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    setRandomMsg(pick);
+    setMsgIndex((i) => i + 1);
+  }, [msgPool, randomMsg]);
+
+  const fireConfetti = () => {
+    if (confettiFired) return;
+    setConfettiFired(true);
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.7 },
+      colors: ['#c82360', '#9060ff', '#ffd966', '#ff80ad'],
+    });
+    setTimeout(() => setConfettiFired(false), 3000);
+  };
+
+  const isSent = randomMsg ? randomMsg.author === p1 : false;
 
   return (
-    <Section
-      id="memories"
-      title="Cápsula del tiempo"
-      subtitle="Los momentos más especiales de vuestra historia"
-      icon={Hourglass}
-    >
-      <div className="space-y-6">
+    <Section id="memories" label="Cápsula de Memorias" title="Momentos que siempre recordaremos">
+      <div className="grid md:grid-cols-2 gap-5">
         {/* Record day */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="blossom-card p-6 md:p-8"
+          className="glass-card p-6 flex flex-col gap-4"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6 }}
         >
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            {/* Trophy */}
-            <motion.div
-              animate={{ rotate: [-5, 5, -5] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="flex-shrink-0 w-24 h-24 rounded-full bg-gradient-to-br from-blossom-gold to-blossom-apricot flex items-center justify-center shadow-blossom-lg"
-            >
-              <Trophy className="w-12 h-12 text-white" />
-            </motion.div>
-
-            <div className="text-center md:text-left flex-1">
-              <p className="label-text mb-1">🏆 Récord histórico de mensajes</p>
-              <h3 className="font-display text-2xl md:text-3xl text-blossom-plum font-bold mb-1 capitalize">
-                {busiestDate}
-              </h3>
-              <p className="font-sans text-blossom-mauve text-sm mb-3">
-                En ese día especial intercambiaron…
-              </p>
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blossom-wine to-blossom-burgundy text-white px-6 py-3 rounded-2xl shadow-blossom">
-                <span className="font-display text-4xl font-bold">{busiestDay?.count?.toLocaleString('es-ES')}</span>
-                <span className="font-sans text-white/80 text-sm">mensajes</span>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(240,168,0,0.12)' }}>
+              <Trophy size={17} style={{ color: '#f0c030' }} />
             </div>
+            <h3 className="font-display text-lg font-medium text-white/90">El Día Récord</h3>
+          </div>
 
-            {/* Preview messages from that day */}
-            {busiestDay?.messages?.length > 0 && (
-              <div className="flex-shrink-0 bg-blossom-petal/60 rounded-2xl p-4 max-w-xs w-full">
-                <p className="label-text mb-3 text-center">Preview de ese día</p>
-                <div className="space-y-2">
-                  {busiestDay.messages.slice(0, 3).map((text, i) => (
-                    <div key={i} className="bg-white/70 rounded-xl px-3 py-2">
-                      <p className="font-sans text-xs text-blossom-burgundy line-clamp-2">{text}</p>
-                    </div>
-                  ))}
+          <button
+            onClick={fireConfetti}
+            className="relative rounded-2xl p-5 text-center cursor-pointer overflow-hidden transition-all duration-300 hover:-translate-y-1 group"
+            style={{
+              background: 'linear-gradient(135deg, rgba(136,11,58,0.3), rgba(200,35,96,0.2), rgba(104,48,224,0.15))',
+              border: '1px solid rgba(200,35,96,0.2)',
+            }}
+          >
+            {/* Shimmer on hover */}
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%)' }}
+            />
+            <div className="flex justify-center mb-3">
+              <span className="text-5xl">🏆</span>
+            </div>
+            <div className="font-display text-4xl font-bold mb-1" style={{ color: '#f0c030' }}>
+              {busiestCount?.toLocaleString('es-CO')}
+            </div>
+            <div className="text-sm text-white/60">mensajes en un solo día</div>
+            <div className="mt-3 text-sm font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              {formatDateShort(busiestDay)}
+            </div>
+            <div className="mt-2 text-xs text-muted">Haz clic para celebrar 🎉</div>
+          </button>
+
+          {/* Busiest month */}
+          {busiestMonth && (
+            <div
+              className="rounded-xl p-4 flex items-center justify-between"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+            >
+              <div className="flex items-center gap-3">
+                <Calendar size={16} style={{ color: '#9060ff' }} />
+                <div>
+                  <div className="text-xs text-muted">Mes más activo</div>
+                  <div className="text-sm font-medium text-white/80">
+                    {(() => {
+                      const [y, m] = busiestMonth.month.split('-');
+                      return new Date(Number(y), Number(m) - 1, 1)
+                        .toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+                    })()}
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Most active month */}
-        {monthlyByVolume && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="blossom-card p-6"
-          >
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <p className="label-text mb-1">📅 Mes más activo de toda la historia</p>
-                <h3 className="font-display text-2xl text-blossom-plum font-bold capitalize">
-                  {monthlyByVolume.label}
-                </h3>
-                <p className="font-sans text-sm text-blossom-mauve mt-1">
-                  {monthlyByVolume.total?.toLocaleString('es-ES')} mensajes ese mes
-                </p>
-              </div>
-              <div className="flex gap-4">
-                {analytics.participants.map((p, i) => (
-                  <div key={p} className="text-center">
-                    <p className={`font-display text-2xl font-bold ${i === 0 ? 'text-blossom-wine' : 'text-blossom-apricot'}`}>
-                      {(monthlyByVolume[p] || 0).toLocaleString('es-ES')}
-                    </p>
-                    <p className="font-sans text-xs text-blossom-mauve">{p}</p>
-                  </div>
-                ))}
+              <div className="text-right">
+                <div className="text-lg font-bold font-mono" style={{ color: '#9060ff' }}>
+                  {busiestMonth.total?.toLocaleString('es-CO')}
+                </div>
+                <div className="text-xs text-muted">mensajes</div>
               </div>
             </div>
-          </motion.div>
-        )}
+          )}
+        </motion.div>
 
-        {/* Random message polaroid */}
+        {/* Random memory */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="blossom-card p-6 md:p-8"
+          className="glass-card p-6 flex flex-col gap-4"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="text-center mb-6">
-            <h3 className="font-display text-2xl text-blossom-burgundy mb-1">
-              ✉️ Mensaje aleatorio de vuestra historia
-            </h3>
-            <p className="font-sans text-sm text-blossom-mauve">Haz clic en la tarjeta para ver otro</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(200,35,96,0.12)' }}>
+                <Shuffle size={17} style={{ color: '#e05c82' }} />
+              </div>
+              <h3 className="font-display text-lg font-medium text-white/90">Ruleta de Recuerdos</h3>
+            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            <PolaroidMessage
-              key={currentMessage?.text?.slice(0, 30)}
-              message={currentMessage}
-              onShuffle={shuffle}
-            />
-          </AnimatePresence>
-
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={shuffle}
-              className="wine-btn flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Otro recuerdo
-            </button>
+          {/* Random message display */}
+          <div
+            className="flex-1 rounded-2xl p-5 min-h-[160px] flex flex-col justify-center"
+            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
+          >
+            <AnimatePresence mode="wait">
+              {randomMsg ? (
+                <motion.div
+                  key={msgIndex}
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <PolaroidMessage
+                    msg={randomMsg.text}
+                    author={randomMsg.author}
+                    date={randomMsg.date}
+                    isSent={isSent}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center"
+                >
+                  <div className="text-4xl mb-3">💬</div>
+                  <p className="text-sm text-muted italic">
+                    Haz clic en el botón para revivir<br />un mensaje aleatorio de nuestra historia
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+
+          <button
+            onClick={pickRandom}
+            className="glow-btn w-full flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">♥</span>
+            {randomMsg ? 'Recordar otro momento' : 'Recordar un momento'}
+          </button>
+
+          {msgPool && (
+            <p className="text-xs text-muted text-center">
+              {msgPool.length.toLocaleString('es-CO')} mensajes en el baúl de recuerdos
+            </p>
+          )}
         </motion.div>
       </div>
     </Section>

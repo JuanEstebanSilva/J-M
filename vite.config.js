@@ -1,26 +1,26 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  assetsInclude: ['**/*.txt'],
   server: {
     watch: {
-      // Ignore .txt files and the src/data directory so Vite doesn't
-      // try to watch the large _chat.txt export file (causes EBUSY on Windows)
-      ignored: ['**/*.txt', '**/src/data/**'],
+      ignored: ['**/node_modules/**', '**/.git/**'],
     },
   },
   build: {
-    chunkSizeWarningLimit: 800,
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-charts': ['recharts'],
-          'vendor-ui': ['lucide-react', 'canvas-confetti'],
+          vendor:   ['react', 'react-dom'],
+          motion:   ['framer-motion'],
+          charts:   ['recharts'],
+          icons:    ['lucide-react'],
         },
       },
     },
   },
-})
+
+});

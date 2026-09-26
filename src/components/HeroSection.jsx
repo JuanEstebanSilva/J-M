@@ -1,182 +1,207 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, BookOpen, Calendar } from 'lucide-react';
-import { CountUp } from './ui.jsx';
+import { MessageCircle, FileText, Image, Calendar } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { CountUp, StatCard } from './ui.jsx';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+});
+
+function formatDate(date) {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('es-CO', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  });
+}
 
 export default function HeroSection({ analytics }) {
-  const { participants, totalMessages, totalWords, daysTogether, firstMessage, lastMessage } = analytics;
-  const hasConfettiRef = useRef(false);
+  const { participants, firstDate, lastDate, daysTotal, totalMessages, totalWords, totalMediaAll } = analytics;
+  const [p1, p2 = '?'] = participants;
+  const firedRef = useRef(false);
 
-  useEffect(() => {
-    if (hasConfettiRef.current) return;
-    hasConfettiRef.current = true;
-
-    // Heart confetti burst
-    const end = Date.now() + 1500;
-    const colors = ['#E8B4B8', '#C07B8E', '#8B3A52', '#F0A896', '#D4A853'];
-
-    const frame = () => {
-      confetti({
-        particleCount: 3,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors,
-        shapes: ['circle'],
-        scalar: 0.8,
-      });
-      confetti({
-        particleCount: 3,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors,
-        shapes: ['circle'],
-        scalar: 0.8,
-      });
-      if (Date.now() < end) requestAnimationFrame(frame);
-    };
-    setTimeout(frame, 300);
-  }, []);
-
-  const firstDateStr = firstMessage?.date?.toLocaleDateString('es-ES', {
-    day: 'numeric', month: 'long', year: 'numeric'
-  });
-  const lastDateStr = lastMessage?.date?.toLocaleDateString('es-ES', {
-    day: 'numeric', month: 'long', year: 'numeric'
-  });
-
-  const years = Math.floor(daysTogether / 365);
-  const months = Math.floor((daysTogether % 365) / 30);
+  const handleConfetti = () => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    confetti({
+      particleCount: 120,
+      spread: 90,
+      origin: { y: 0.55 },
+      colors: ['#c82360', '#9060ff', '#f04080', '#ffd966', '#ff80ad'],
+      shapes: ['circle', 'square'],
+      scalar: 1.1,
+    });
+    setTimeout(() => confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 }, colors: ['#c82360', '#fff', '#9060ff'] }), 600);
+    setTimeout(() => { firedRef.current = false; }, 3000);
+  };
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-blossom-rose/20 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-blossom-peach/20 blur-3xl pointer-events-none" />
+    <section
+      id="hero"
+      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-16 px-4"
+    >
+      {/* Background mesh */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(at 20% 80%, rgba(136,11,58,0.25) 0%, transparent 50%),
+            radial-gradient(at 80% 20%, rgba(104,48,224,0.2) 0%, transparent 50%),
+            radial-gradient(at 60% 60%, rgba(200,35,96,0.08) 0%, transparent 40%),
+            #0a0a0f
+          `,
+        }}
+      />
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10"
-      >
-        {/* Main hero card */}
-        <div className="blossom-card p-8 md:p-12 mb-8 relative overflow-hidden">
-          {/* Inner decoration */}
-          <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-gradient-to-bl from-blossom-blush/40 to-transparent pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-gradient-to-tr from-blossom-rose/20 to-transparent pointer-events-none" />
+      {/* Stars/particles bg */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: 1 + Math.random() * 2,
+              height: 1 + Math.random() * 2,
+              background: i % 3 === 0 ? 'rgba(200,35,96,0.6)' : i % 3 === 1 ? 'rgba(144,96,255,0.5)' : 'rgba(255,255,255,0.3)',
+            }}
+            animate={{ opacity: [0.2, 1, 0.2] }}
+            transition={{ duration: 2 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 3, ease: 'easeInOut' }}
+          />
+        ))}
+      </div>
 
-          <div className="relative z-10 text-center">
-            {/* Hearts icon */}
-            <motion.div
-              className="heartbeat inline-flex mb-6"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+      <div className="relative z-10 max-w-5xl w-full mx-auto text-center">
+        {/* Names */}
+        <motion.div {...fadeUp(0)} className="flex flex-col items-center gap-4 mb-10">
+          <span className="section-label tracking-[0.3em]">✦ nuestra historia ✦</span>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <motion.span
+              className="font-display text-5xl md:text-7xl font-semibold"
+              style={{
+                background: 'linear-gradient(135deg, #fff 0%, #ffd0e0 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}
+              animate={{ opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <span className="text-5xl">❤️</span>
-            </motion.div>
-
-            {/* Names */}
+              {p1}
+            </motion.span>
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="flex items-center justify-center gap-4 mb-6 flex-wrap"
+              className="flex items-center justify-center"
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <span className="font-display text-3xl md:text-4xl text-blossom-wine font-semibold">
-                {participants[0]}
-              </span>
-              <span className="text-3xl">🌸</span>
-              <span className="font-display text-3xl md:text-4xl text-blossom-burgundy font-semibold">
-                {participants[1]}
+              <span
+                className="text-4xl md:text-5xl select-none cursor-pointer"
+                style={{ filter: 'drop-shadow(0 0 12px rgba(200,35,96,0.6))' }}
+                onClick={handleConfetti}
+                title="¡Haz clic! 🎉"
+              >
+                ♥
               </span>
             </motion.div>
-
-            {/* Title */}
-            <h1 className="font-display text-4xl md:text-6xl text-blossom-plum font-bold mb-2 leading-tight">
-              Nuestra <span className="italic text-gradient-blossom">Historia</span>
-            </h1>
-            <p className="font-sans text-blossom-mauve text-lg mb-8">
-              {firstDateStr} — {lastDateStr}
-            </p>
-
-            {/* Days counter — big impact */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, type: 'spring', stiffness: 150 }}
-              className="inline-flex flex-col items-center justify-center w-52 h-52 rounded-full bg-gradient-to-br from-blossom-wine to-blossom-plum shadow-blossom-lg mx-auto mb-8"
+            <motion.span
+              className="font-display text-5xl md:text-7xl font-semibold"
+              style={{
+                background: 'linear-gradient(135deg, #c0a0ff 0%, #fff 100%)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              }}
+              animate={{ opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
             >
-              <span className="font-display text-6xl font-bold text-white leading-none">
-                <CountUp to={daysTogether} duration={2000} />
-              </span>
-              <span className="font-sans text-white/80 text-sm mt-1 tracking-widest uppercase">días</span>
-              {(years > 0 || months > 0) && (
-                <span className="font-sans text-white/60 text-xs mt-1">
-                  {years > 0 ? `${years} año${years > 1 ? 's' : ''}` : ''}
-                  {years > 0 && months > 0 ? ' y ' : ''}
-                  {months > 0 ? `${months} mes${months > 1 ? 'es' : ''}` : ''}
-                </span>
-              )}
-            </motion.div>
+              {p2}
+            </motion.span>
           </div>
-        </div>
+          <p className="text-sm text-muted-soft font-light">
+            Desde{' '}
+            <span style={{ color: '#e05c82' }}>{formatDate(firstDate)}</span>
+            {' '}hasta{' '}
+            <span style={{ color: '#9060ff' }}>{formatDate(lastDate)}</span>
+          </p>
+        </motion.div>
 
-        {/* Quick stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            {
-              icon: MessageCircle,
-              label: 'Mensajes',
-              value: totalMessages,
-              color: 'from-blossom-wine to-blossom-burgundy',
-              delay: 0.1,
-            },
-            {
-              icon: BookOpen,
-              label: 'Palabras',
-              value: totalWords,
-              color: 'from-blossom-apricot to-blossom-peach',
-              delay: 0.2,
-            },
-            {
-              icon: Calendar,
-              label: 'Años juntos',
-              value: years || '< 1',
-              color: 'from-blossom-mauve to-blossom-rose',
-              isText: true,
-              delay: 0.3,
-            },
-            {
-              icon: Heart,
-              label: 'Por día aprox.',
-              value: Math.round(totalMessages / Math.max(daysTogether, 1)),
-              suffix: ' msgs',
-              color: 'from-blossom-gold to-yellow-400',
-              delay: 0.4,
-            },
-          ].map(({ icon: Icon, label, value, color, delay, isText, suffix }) => (
+        {/* Days counter circle */}
+        <motion.div {...fadeUp(0.15)} className="flex justify-center mb-12">
+          <button
+            onClick={handleConfetti}
+            className="relative group"
+            aria-label="Celebrar nuestro amor"
+          >
+            {/* Outer glow ring */}
             <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay, duration: 0.5 }}
-              whileHover={{ y: -4 }}
-              className="blossom-card p-5 text-center"
+              className="absolute inset-0 rounded-full"
+              style={{ background: 'conic-gradient(from 0deg, #880b3a, #c82360, #9060ff, #6830e0, #880b3a)', padding: 2 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
             >
-              <div className={`inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br ${color} mb-3 shadow-blossom`}>
-                <Icon className="w-4.5 h-4.5 text-white" size={18} />
-              </div>
-              <div className="stat-number text-3xl mb-0.5">
-                {isText ? value : <CountUp to={typeof value === 'number' ? value : 0} duration={1800} suffix={suffix || ''} />}
-              </div>
-              <p className="label-text text-xs">{label}</p>
+              <div className="w-full h-full rounded-full" style={{ background: '#0a0a0f' }} />
             </motion.div>
-          ))}
-        </div>
+
+            <div
+              className="relative w-52 h-52 md:w-64 md:h-64 rounded-full flex flex-col items-center justify-center gap-1 m-1"
+              style={{
+                background: 'radial-gradient(circle at 35% 35%, rgba(136,11,58,0.35), rgba(10,10,15,0.9))',
+                border: '1px solid rgba(200,35,96,0.15)',
+              }}
+            >
+              <span className="text-xs text-muted uppercase tracking-widest">llevamos juntos</span>
+              <CountUp
+                end={daysTotal}
+                duration={1800}
+                className="font-display text-6xl md:text-7xl font-bold gradient-text"
+              />
+              <span className="text-sm text-muted-soft">días</span>
+              <span className="text-xs text-muted mt-1">Haz clic 🎉</span>
+            </div>
+          </button>
+        </motion.div>
+
+        {/* Quick stat cards */}
+        <motion.div {...fadeUp(0.25)} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <StatCard
+            icon={<MessageCircle size={20} style={{ color: '#e05c82' }} />}
+            label="Mensajes"
+            value={<CountUp end={totalMessages} duration={1500} />}
+            sub="enviados en total"
+            accent="wine"
+          />
+          <StatCard
+            icon={<FileText size={20} style={{ color: '#9060ff' }} />}
+            label="Palabras"
+            value={<CountUp end={totalWords} duration={1700} />}
+            sub="palabras escritas"
+            accent="violet"
+          />
+          <StatCard
+            icon={<Image size={20} style={{ color: '#f04080' }} />}
+            label="Fotos & Audios"
+            value={<CountUp end={totalMediaAll} duration={1400} />}
+            sub="archivos compartidos"
+            accent="rose"
+          />
+          <StatCard
+            icon={<Calendar size={20} style={{ color: '#f0a800' }} />}
+            label="Días juntos"
+            value={<CountUp end={daysTotal} duration={1600} />}
+            sub="de historia compartida"
+            accent="gold"
+          />
+        </motion.div>
+      </div>
+
+      {/* Scroll indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
+        animate={{ y: [0, 8, 0], opacity: [0.4, 0.9, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <span className="text-xs text-muted tracking-wider">Desliza</span>
+        <div className="w-px h-8" style={{ background: 'linear-gradient(180deg, rgba(200,35,96,0.6), transparent)' }} />
       </motion.div>
-    </div>
+    </section>
   );
 }

@@ -1,120 +1,147 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Menu, X } from 'lucide-react';
+import { Heart, BarChart2, Clock, Sparkles, Menu, X } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { href: '#hero', label: 'Portada' },
-  { href: '#couple-stats', label: 'Pareja' },
-  { href: '#activity', label: 'Actividad' },
-  { href: '#vocabulary', label: 'Vocabulario' },
-  { href: '#memories', label: 'Memorias' },
+  { href: '#hero',       label: 'Inicio',     icon: Heart },
+  { href: '#couple',     label: 'Dinamómetros', icon: BarChart2 },
+  { href: '#activity',   label: 'Hábitos',    icon: Clock },
+  { href: '#vocabulary', label: 'Palabras',   icon: Sparkles },
+  { href: '#memories',   label: 'Memorias',   icon: Heart },
 ];
 
-export default function Navbar({ onWrappedOpen, onReset }) {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+export default function Navbar({ names }) {
+  const [scrolled, setScrolled]  = useState(false);
+  const [menuOpen, setMenuOpen]  = useState(false);
+  const [active, setActive]      = useState('hero');
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 30);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 40);
+      // Update active section
+      const sections = NAV_ITEMS.map((n) => n.href.slice(1));
+      for (const id of [...sections].reverse()) {
+        const el = document.getElementById(id);
+        if (el && window.scrollY >= el.offsetTop - 120) {
+          setActive(id);
+          break;
+        }
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const scrollTo = (href) => {
-    setMobileOpen(false);
-    const el = document.querySelector(href);
+  const handleNav = (href) => {
+    setMenuOpen(false);
+    const id = href.slice(1);
+    const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const title = names?.length >= 2 ? `${names[0]} & ${names[1]}` : 'Nuestra Historia';
 
   return (
     <>
       <motion.nav
+        className="fixed top-0 left-0 right-0 z-40 transition-all duration-500"
+        style={
+          scrolled
+            ? { background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }
+            : { background: 'transparent' }
+        }
         initial={{ y: -80 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className={`
-          fixed top-0 left-0 right-0 z-40 transition-all duration-300
-          ${scrolled
-            ? 'bg-white/80 backdrop-blur-xl shadow-blossom border-b border-blossom-blush/50'
-            : 'bg-transparent'
-          }
-        `}
+        transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <button onClick={onReset} className="flex items-center gap-2 group">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-blossom-rose to-blossom-wine flex items-center justify-center shadow-blossom"
+          <button
+            onClick={() => handleNav('#hero')}
+            className="flex items-center gap-2.5 group"
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-300 group-hover:shadow-glow-wine"
+              style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
             >
-              <Heart className="w-4 h-4 text-white" fill="white" />
-            </motion.div>
-            <span className="font-display text-lg text-blossom-wine font-semibold group-hover:text-blossom-burgundy transition-colors">
-              Love Wrapped
+              ♥
+            </div>
+            <span
+              className="font-display text-sm font-medium hidden sm:block"
+              style={{ color: 'rgba(255,255,255,0.8)' }}
+            >
+              {title}
             </span>
           </button>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map(item => (
-              <button
-                key={item.href}
-                onClick={() => scrollTo(item.href)}
-                className="font-sans text-sm text-blossom-mauve hover:text-blossom-wine px-3 py-2 rounded-full hover:bg-blossom-blush/50 transition-all duration-200"
-              >
-                {item.label}
-              </button>
-            ))}
+            {NAV_ITEMS.map(({ href, label }) => {
+              const id = href.slice(1);
+              const isActive = active === id;
+              return (
+                <button
+                  key={href}
+                  onClick={() => handleNav(href)}
+                  className="relative px-4 py-2 text-sm rounded-full transition-all duration-200"
+                  style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.55)' }}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-pill"
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: 'rgba(200,35,96,0.15)', border: '1px solid rgba(200,35,96,0.2)' }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative">{label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* CTA */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onWrappedOpen}
-              className="wine-btn text-sm py-2 px-4 flex items-center gap-1.5 hidden sm:flex"
-            >
-              <span>✨</span>
-              Love Wrapped
-            </button>
-            <button
-              onClick={() => setMobileOpen(o => !o)}
-              className="md:hidden w-9 h-9 rounded-full bg-blossom-blush/60 flex items-center justify-center text-blossom-wine hover:bg-blossom-blush transition-colors"
-            >
-              {mobileOpen ? <X className="w-4.5 h-4.5" size={18} /> : <Menu className="w-4.5 h-4.5" size={18} />}
-            </button>
-          </div>
+          {/* Mobile menu button */}
+          <button
+            className="md:hidden p-2 rounded-xl transition-colors"
+            style={{ color: 'rgba(255,255,255,0.7)' }}
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Menú"
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </motion.nav>
 
-      {/* Mobile menu */}
+      {/* Mobile drawer */}
       <AnimatePresence>
-        {mobileOpen && (
+        {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.25 }}
-            className="fixed top-16 left-0 right-0 z-30 bg-white/95 backdrop-blur-xl shadow-blossom-lg border-b border-blossom-blush/50 px-4 py-4"
+            className="fixed inset-0 z-30 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
-            <div className="flex flex-col gap-1">
-              {NAV_ITEMS.map(item => (
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMenuOpen(false)} />
+            <motion.div
+              className="absolute right-0 top-0 bottom-0 w-64 flex flex-col pt-20 px-4 gap-2"
+              style={{ background: 'rgba(18,18,28,0.97)', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
                 <button
-                  key={item.href}
-                  onClick={() => scrollTo(item.href)}
-                  className="font-sans text-base text-blossom-mauve hover:text-blossom-wine text-left px-4 py-3 rounded-xl hover:bg-blossom-petal transition-all"
+                  key={href}
+                  onClick={() => handleNav(href)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all duration-200 hover:bg-white/5"
+                  style={{ color: active === href.slice(1) ? '#e05c82' : 'rgba(255,255,255,0.7)' }}
                 >
-                  {item.label}
+                  <Icon size={16} />
+                  {label}
                 </button>
               ))}
-              <div className="h-px bg-blossom-blush my-2" />
-              <button
-                onClick={() => { setMobileOpen(false); onWrappedOpen(); }}
-                className="wine-btn text-sm py-2.5 text-center"
-              >
-                ✨ Ver Love Wrapped
-              </button>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
