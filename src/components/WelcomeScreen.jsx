@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { startBackgroundMusic } from '../utils/romanticAudio.js';
 
-const PETALS = Array.from({ length: 18 }, (_, i) => ({
+const PETALS = Array.from({ length: 10 }, (_, i) => ({
   id: i,
-  char: ['🌸','✦','♥','🌺','✨','❀','🌷','⋆','💮'][i % 9],
-  x: 5 + (i * 5.5) % 90,
-  size: 14 + (i % 5) * 6,
-  duration: 12 + (i % 7) * 3,
-  delay: (i % 9) * 1.1,
-  drift: (i % 2 === 0 ? 1 : -1) * (20 + (i % 4) * 10),
+  char: ['🌸','✦','♥','🌺','✨','🌷'][i % 6],
+  x: 8 + (i * 9) % 84,
+  size: 14 + (i % 3) * 5,
+  duration: 10 + (i % 4) * 2.5,
+  delay: (i % 5) * 0.8,
+  drift: (i % 2 === 0 ? 1 : -1) * (14 + (i % 3) * 8),
 }));
 
 export default function WelcomeScreen({ onDone }) {
@@ -113,27 +113,23 @@ export default function WelcomeScreen({ onDone }) {
           transition={{ delay: 0.1, duration: 0.9, type: 'spring', stiffness: 180 }}
         >
           {/* Outer spinning conic ring */}
-          <motion.div
-            className="absolute -inset-4 rounded-full"
+          <div
+            className="absolute -inset-3 sm:-inset-4 rounded-full will-change-transform animate-rose-spin"
             style={{
-              background: 'conic-gradient(from 0deg, rgba(107,28,63,0) 0%, rgba(200,35,96,0.7) 25%, rgba(201,169,110,0.8) 50%, rgba(139,92,246,0.5) 75%, rgba(107,28,63,0) 100%)',
-              filter: 'blur(6px)',
+              background: 'conic-gradient(from 0deg, rgba(107,28,63,0) 0%, rgba(200,35,96,0.6) 25%, rgba(201,169,110,0.7) 50%, rgba(139,92,246,0.4) 75%, rgba(107,28,63,0) 100%)',
+              filter: 'blur(4px)',
             }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
           />
           {/* Heart container */}
-          <motion.div
-            className="relative w-24 h-24 rounded-full flex items-center justify-center text-5xl"
+          <div
+            className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center text-4xl sm:text-5xl animate-heartbeat select-none"
             style={{
               background: 'linear-gradient(135deg, #6B1C3F, #c82360, #9B6B9B)',
-              boxShadow: '0 0 40px rgba(200,35,96,0.5), 0 0 80px rgba(107,28,63,0.3)',
+              boxShadow: '0 0 32px rgba(200,35,96,0.5)',
             }}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
           >
             ♥
-          </motion.div>
+          </div>
         </motion.div>
 
         {/* Titles */}

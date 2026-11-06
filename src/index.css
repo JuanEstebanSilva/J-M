@@ -68,34 +68,34 @@
       rgba(16, 10, 28, 0.90)
     );
     border-color: rgba(201,169,110,0.12);
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     box-shadow:
-      0 16px 48px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(201,169,110,0.10),
-      inset 0 0 60px rgba(107,28,63,0.04);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      0 12px 32px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(201,169,110,0.10);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    will-change: transform;
   }
   .glass-card:hover {
     box-shadow:
-      0 24px 64px rgba(0,0,0,0.75),
-      0 0 40px rgba(200,35,96,0.18),
-      inset 0 1px 0 rgba(201,169,110,0.2);
+      0 16px 40px rgba(0,0,0,0.6),
+      0 0 24px rgba(200,35,96,0.15);
     border-color: rgba(201,169,110,0.25);
-    transform: translateY(-4px);
+    transform: translateY(-3px);
   }
 
   /* ── Dark card ──────────────────────────────────────────────────────── */
   .dark-card {
-    @apply rounded-3xl border p-7;
+    @apply rounded-3xl border p-5 sm:p-7;
     background: linear-gradient(150deg, rgba(36, 24, 52, 0.96), rgba(22, 14, 38, 0.94));
     border-color: rgba(201,169,110,0.08);
-    box-shadow: 0 10px 36px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transition: transform 0.25s ease, border-color 0.25s ease;
+    will-change: transform;
   }
   .dark-card:hover {
     border-color: rgba(200,35,96,0.28);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.65);
+    transform: translateY(-2px);
   }
 
   /* ── Gradient text ──────────────────────────────────────────────────── */
@@ -103,13 +103,10 @@
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg,
       #fff8f0 0%,
-      #FFD6E0 25%,
-      #FF8FA3 55%,
-      #C9A96E 80%,
-      #fff8f0 100%
+      #FFD6E0 30%,
+      #FF8FA3 60%,
+      #C9A96E 90%
     );
-    background-size: 200% 100%;
-    animation: shimmer-text 5s ease-in-out infinite;
   }
   .gradient-text-gold {
     @apply bg-clip-text text-transparent;
@@ -252,13 +249,9 @@
 .shimmer-line {
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(201,169,110,0.5) 25%,
-    rgba(255,143,163,0.6) 50%,
-    rgba(201,169,110,0.5) 75%,
+    rgba(201,169,110,0.5) 50%,
     transparent 100%
   );
-  background-size: 200% 100%;
-  animation: shimmer-line-anim 3s ease-in-out infinite;
 }
 
 /* ── Washi tape ─────────────────────────────────────────────────────── */

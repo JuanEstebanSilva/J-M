@@ -48,29 +48,23 @@ export function StatCard({ icon, label, value, sub, accent = 'wine', className =
     rose:   'rgba(255,143,163,0.28)',
     gold:   'rgba(201,169,110,0.3)',
   };
-  const glowMap = {
-    wine:   '0 10px 30px rgba(200,35,96,0.2)',
-    violet: '0 10px 30px rgba(139,92,246,0.2)',
-    rose:   '0 10px 30px rgba(255,143,163,0.2)',
-    gold:   '0 10px 30px rgba(201,169,110,0.2)',
-  };
 
   return (
     <div
-      className={`relative rounded-3xl p-6 flex flex-col gap-3 transition-all duration-300 hover:-translate-y-1.5 ${className}`}
+      className={`relative rounded-3xl p-4 sm:p-6 flex flex-col gap-2 sm:gap-3 transition-transform duration-200 hover:-translate-y-1 will-change-transform ${className}`}
       style={{
-        background: `linear-gradient(145deg, ${accentMap[accent] || accentMap.wine}, rgba(18, 14, 28, 0.85))`,
+        background: `linear-gradient(145deg, ${accentMap[accent] || accentMap.wine}, rgba(18, 14, 28, 0.9))`,
         border: `1px solid ${borderMap[accent] || borderMap.wine}`,
-        boxShadow: glowMap[accent] || glowMap.wine,
-        backdropFilter: 'blur(16px)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        backdropFilter: 'blur(10px)',
       }}
     >
       <div className="flex items-center justify-between">
-        <span className="text-3xl p-2.5 rounded-2xl bg-white/5 border border-white/10 shadow-inner">{icon}</span>
+        <span className="text-2xl sm:text-3xl p-2 sm:p-2.5 rounded-2xl bg-white/5 border border-white/10 shadow-inner">{icon}</span>
       </div>
-      <div className="text-3xl sm:text-4xl md:text-5xl font-black text-white font-mono tracking-tight">{value}</div>
-      <div className="text-sm font-bold text-white/90 uppercase tracking-widest">{label}</div>
-      {sub && <div className="text-xs text-white/70 font-light mt-0.5">{sub}</div>}
+      <div className="text-2xl sm:text-4xl md:text-5xl font-black text-white font-mono tracking-tight">{value}</div>
+      <div className="text-xs sm:text-sm font-bold text-white/90 uppercase tracking-wider">{label}</div>
+      {sub && <div className="text-[11px] sm:text-xs text-white/70 font-light mt-0.5 line-clamp-1">{sub}</div>}
     </div>
   );
 }

@@ -102,20 +102,18 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
 
       {/* Twinkling romantic stars */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 45 }).map((_, i) => (
-          <motion.div
+        {Array.from({ length: 18 }).map((_, i) => (
+          <div
             key={i}
-            className="absolute rounded-full"
+            className="absolute rounded-full opacity-60"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: 1.5 + Math.random() * 2.5,
-              height: 1.5 + Math.random() * 2.5,
-              background: i % 3 === 0 ? 'rgba(255,217,102,0.8)' : i % 2 === 0 ? 'rgba(240,64,128,0.7)' : 'rgba(144,96,255,0.7)',
-              boxShadow: '0 0 6px rgba(255,255,255,0.8)',
+              left: `${(i * 17 + 5) % 96}%`,
+              top: `${(i * 23 + 7) % 94}%`,
+              width: 2 + (i % 3),
+              height: 2 + (i % 3),
+              background: i % 3 === 0 ? '#ffd966' : i % 2 === 0 ? '#f04080' : '#b088ff',
+              boxShadow: '0 0 6px rgba(255,255,255,0.7)',
             }}
-            animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
-            transition={{ duration: 2.5 + Math.random() * 3.5, repeat: Infinity, delay: Math.random() * 3, ease: 'easeInOut' }}
           />
         ))}
       </div>
@@ -160,9 +158,9 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
         </motion.div>
 
         {/* Large Names: Juanes & Pau */}
-        <motion.div {...fadeUp(0.1)} className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 mb-4">
+        <motion.div {...fadeUp(0.1)} className="flex items-center justify-center gap-2 sm:gap-4 md:gap-5 mb-4 max-w-full">
           <motion.span
-            className="font-display text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
+            className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight truncate max-w-[42vw] text-right"
             style={{
               background: 'linear-gradient(145deg, #fff8f0 0%, #FFD6E0 40%, #FF8FA3 70%, #c82360 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
@@ -173,22 +171,22 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
           </motion.span>
 
           <motion.div
-            className="flex items-center justify-center cursor-pointer select-none"
+            className="flex items-center justify-center cursor-pointer select-none shrink-0"
             whileHover={{ scale: 1.25, rotate: 10 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleConfetti}
             title="¡Toca para celebrar nuestro amor! 🎉"
           >
             <span
-              className="text-5xl sm:text-6xl md:text-7xl"
-              style={{ color: '#FF8FA3', filter: 'drop-shadow(0 0 24px rgba(255,143,163,0.9))' }}
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl animate-pulse"
+              style={{ color: '#FF8FA3', filter: 'drop-shadow(0 0 16px rgba(255,143,163,0.8))' }}
             >
               ♥
             </span>
           </motion.div>
 
           <motion.span
-            className="font-display text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
+            className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight truncate max-w-[42vw] text-left"
             style={{
               background: 'linear-gradient(145deg, #fff8f0 0%, #e8d4ff 40%, #c0a0ff 70%, #8B5CF6 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
@@ -220,33 +218,33 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
             <span>Tiempo exacto de novios (desde el 28/02/2020)</span>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 sm:gap-4 text-center">
-            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
-              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black gradient-text-rose block">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-center">
+            <div className="p-2 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-xl sm:text-3xl md:text-5xl font-black gradient-text-rose block">
                 {elapsed.days}
               </span>
-              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Días Juntos</span>
+              <span className="text-[10px] sm:text-xs text-white/60 uppercase font-semibold">Días Juntos</span>
             </div>
 
-            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
-              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black text-white block">
+            <div className="p-2 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-xl sm:text-3xl md:text-5xl font-black text-white block">
                 {String(elapsed.hours).padStart(2, '0')}
               </span>
-              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Horas</span>
+              <span className="text-[10px] sm:text-xs text-white/60 uppercase font-semibold">Horas</span>
             </div>
 
-            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
-              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black text-white block">
+            <div className="p-2 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-xl sm:text-3xl md:text-5xl font-black text-white block">
                 {String(elapsed.minutes).padStart(2, '0')}
               </span>
-              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Minutos</span>
+              <span className="text-[10px] sm:text-xs text-white/60 uppercase font-semibold">Minutos</span>
             </div>
 
-            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
-              <span className="font-mono text-2xl sm:text-4xl md:text-5xl font-black gradient-text-gold block">
+            <div className="p-2 sm:p-4 rounded-2xl bg-white/[0.04] border border-white/5">
+              <span className="font-mono text-xl sm:text-3xl md:text-5xl font-black gradient-text-gold block">
                 {String(elapsed.seconds).padStart(2, '0')}
               </span>
-              <span className="text-[11px] sm:text-xs text-white/60 uppercase font-semibold">Segundos</span>
+              <span className="text-[10px] sm:text-xs text-white/60 uppercase font-semibold">Segundos</span>
             </div>
           </div>
         </motion.div>

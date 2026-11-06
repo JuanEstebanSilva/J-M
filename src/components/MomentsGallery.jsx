@@ -60,7 +60,7 @@ export default function MomentsGallery() {
       label="✦ Nuestra Galería de Recuerdos ✦"
       title="Momentos que no cambiaría por nada en el mundo"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
         {COUPLE_PHOTOS.map((photo, index) => {
           return (
             <motion.div

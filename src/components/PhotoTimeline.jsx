@@ -23,19 +23,21 @@ const fadeUp = (delay = 0) => ({
 
 /* ─── 3-D tilt card ─────────────────────────────────────────────────────────── */
 function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   const ref = useRef(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [8, -8]), { stiffness: 280, damping: 30 });
-  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-8, 8]), { stiffness: 280, damping: 30 });
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [6, -6]), { stiffness: 220, damping: 25 });
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-6, 6]), { stiffness: 220, damping: 25 });
 
   const handleMouse = useCallback((e) => {
+    if (isTouchDevice) return;
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
     x.set((e.clientX - rect.left) / rect.width - 0.5);
     y.set((e.clientY - rect.top) / rect.height - 0.5);
-  }, [x, y]);
+  }, [x, y, isTouchDevice]);
 
   const handleLeave = useCallback(() => {
     x.set(0);
@@ -44,18 +46,18 @@ function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
 
   return (
     <motion.div
-      {...fadeUp((index % 4) * 0.08)}
+      {...fadeUp((index % 4) * 0.05)}
       ref={ref}
       className="relative group cursor-pointer w-full"
       onMouseMove={handleMouse}
       onMouseLeave={handleLeave}
       onClick={() => onClick({ ...photo, index })}
-      style={{ perspective: 1000 }}
+      style={{ perspective: 800 }}
     >
       <motion.div
-        style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-        className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/[0.08]
-          group-hover:border-rose-500/40 transition-colors duration-500"
+        style={!isTouchDevice ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : {}}
+        className="relative rounded-3xl overflow-hidden shadow-xl border border-white/[0.08]
+          group-hover:border-rose-500/40 transition-colors duration-300 will-change-transform"
       >
         {/* ── Photo ─────────────────────────────────────────────────── */}
         <div className="relative aspect-[4/5] overflow-hidden">
@@ -134,17 +136,19 @@ function TiltCard({ photo, index, onClick, likes, onLike, floatingHearts }) {
           </div>
         </div>
 
-        {/* 3-D shine layer */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none rounded-3xl"
-          style={{
-            background: useTransform(
-              [x, y],
-              ([lx, ly]) =>
-                `radial-gradient(circle at ${(lx + 0.5) * 100}% ${(ly + 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 65%)`,
-            ),
-          }}
-        />
+        {/* 3-D shine layer (desktop only) */}
+        {!isTouchDevice && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-3xl"
+            style={{
+              background: useTransform(
+                [x, y],
+                ([lx, ly]) =>
+                  `radial-gradient(circle at ${(lx + 0.5) * 100}% ${(ly + 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 65%)`,
+              ),
+            }}
+          />
+        )}
       </motion.div>
     </motion.div>
   );
