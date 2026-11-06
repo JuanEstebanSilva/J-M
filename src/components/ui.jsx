@@ -37,22 +37,22 @@ export function CountUp({ end, duration = 1500, prefix = '', suffix = '', decima
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 export function StatCard({ icon, label, value, sub, accent = 'wine', className = '' }) {
   const accentMap = {
-    wine:   'rgba(200,35,96,0.16)',
-    violet: 'rgba(144,96,255,0.16)',
-    rose:   'rgba(240,64,128,0.16)',
-    gold:   'rgba(240,168,0,0.16)',
+    wine:   'rgba(200,35,96,0.14)',
+    violet: 'rgba(139,92,246,0.14)',
+    rose:   'rgba(255,143,163,0.14)',
+    gold:   'rgba(201,169,110,0.14)',
   };
   const borderMap = {
-    wine:   'rgba(200,35,96,0.3)',
-    violet: 'rgba(144,96,255,0.3)',
-    rose:   'rgba(240,64,128,0.3)',
-    gold:   'rgba(240,168,0,0.3)',
+    wine:   'rgba(200,35,96,0.28)',
+    violet: 'rgba(139,92,246,0.28)',
+    rose:   'rgba(255,143,163,0.28)',
+    gold:   'rgba(201,169,110,0.3)',
   };
   const glowMap = {
     wine:   '0 10px 30px rgba(200,35,96,0.2)',
-    violet: '0 10px 30px rgba(144,96,255,0.2)',
-    rose:   '0 10px 30px rgba(240,64,128,0.2)',
-    gold:   '0 10px 30px rgba(240,168,0,0.2)',
+    violet: '0 10px 30px rgba(139,92,246,0.2)',
+    rose:   '0 10px 30px rgba(255,143,163,0.2)',
+    gold:   '0 10px 30px rgba(201,169,110,0.2)',
   };
 
   return (
@@ -79,14 +79,14 @@ export function StatCard({ icon, label, value, sub, accent = 'wine', className =
 export function Section({ id, label, title, children, className = '' }) {
   return (
     <section id={id} className={`py-20 ${className}`}>
-      <div className="mb-12">
+      <div className="mb-12 text-center">
         {label && <p className="section-label mb-3 inline-block">{label}</p>}
         {title && (
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mt-2">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mt-2 text-center">
             {title}
           </h2>
         )}
-        <div className="mt-5 h-1 w-24 shimmer-line rounded-full" />
+        <div className="mt-5 h-px w-24 mx-auto shimmer-line rounded-full opacity-60" />
       </div>
       {children}
     </section>

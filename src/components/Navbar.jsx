@@ -49,7 +49,7 @@ export default function Navbar({ names, onOpenWrapped }) {
         className="fixed top-0 left-0 right-0 z-40 transition-all duration-500"
         style={
           scrolled
-            ? { background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }
+            ? { background: 'rgba(7,5,16,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }
             : { background: 'transparent' }
         }
         initial={{ y: -80 }}
@@ -64,13 +64,13 @@ export default function Navbar({ names, onOpenWrapped }) {
           >
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-300 group-hover:shadow-glow-wine"
-              style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+              style={{ background: 'linear-gradient(135deg, #6B1C3F, #c82360)' }}
             >
               ♥
             </div>
             <span
               className="font-display text-sm font-medium hidden sm:block"
-              style={{ color: 'rgba(255,255,255,0.8)' }}
+              style={{ color: 'rgba(255,214,224,0.9)', fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 500 }}
             >
               {title}
             </span>
@@ -89,10 +89,10 @@ export default function Navbar({ names, onOpenWrapped }) {
                   style={{ color: isActive ? '#fff' : 'rgba(255,255,255,0.55)' }}
                 >
                   {isActive && (
-                    <motion.span
+                      <motion.span
                       layoutId="nav-pill"
                       className="absolute inset-0 rounded-full"
-                      style={{ background: 'rgba(200,35,96,0.15)', border: '1px solid rgba(200,35,96,0.2)' }}
+                      style={{ background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.25)' }}
                       transition={{ type: 'spring', stiffness: 400, damping: 35 }}
                     />
                   )}
@@ -106,7 +106,7 @@ export default function Navbar({ names, onOpenWrapped }) {
               <button
                 onClick={onOpenWrapped}
                 className="ml-3 px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 text-white transition-all duration-300 shadow-glow-wine hover:scale-105 active:scale-95 border border-rose-500/30"
-                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+                style={{ background: 'linear-gradient(135deg, #6B1C3F, #c82360)' }}
               >
                 <Sparkles size={13} className="text-rose-200 animate-spin-slow" />
                 <span>✦ Ver Wrapped ✦</span>
@@ -120,7 +120,7 @@ export default function Navbar({ names, onOpenWrapped }) {
               <button
                 onClick={onOpenWrapped}
                 className="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 text-white border border-rose-500/30"
-                style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+                style={{ background: 'linear-gradient(135deg, #6B1C3F, #c82360)' }}
               >
                 <Sparkles size={12} className="text-rose-200" />
                 <span>Wrapped</span>
@@ -172,7 +172,7 @@ export default function Navbar({ names, onOpenWrapped }) {
                 <button
                   onClick={() => { setMenuOpen(false); onOpenWrapped(); }}
                   className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium text-white transition-all duration-200 mt-3 shadow-glow-wine border border-rose-500/30"
-                  style={{ background: 'linear-gradient(135deg, #880b3a, #c82360)' }}
+                  style={{ background: 'linear-gradient(135deg, #6B1C3F, #c82360)' }}
                 >
                   <Sparkles size={16} className="text-rose-200" />
                   <span>✦ Ver Love Wrapped ✦</span>

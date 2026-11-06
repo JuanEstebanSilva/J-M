@@ -92,10 +92,10 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(at 20% 75%, rgba(160, 16, 75, 0.32) 0%, transparent 55%),
-            radial-gradient(at 80% 25%, rgba(120, 60, 240, 0.25) 0%, transparent 55%),
-            radial-gradient(at 50% 50%, rgba(200, 35, 96, 0.12) 0%, transparent 50%),
-            #08080d
+            radial-gradient(ellipse at 15% 85%, rgba(107,28,63,0.4) 0%, transparent 55%),
+            radial-gradient(ellipse at 85% 15%, rgba(100,50,200,0.3) 0%, transparent 55%),
+            radial-gradient(ellipse at 50% 50%, rgba(201,169,110,0.06) 0%, transparent 50%),
+            #070510
           `,
         }}
       />
@@ -164,7 +164,7 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
           <motion.span
             className="font-display text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
             style={{
-              background: 'linear-gradient(135deg, #ffffff 10%, #ffd0e0 60%, #c82360 100%)',
+              background: 'linear-gradient(145deg, #fff8f0 0%, #FFD6E0 40%, #FF8FA3 70%, #c82360 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               filter: 'drop-shadow(0 4px 20px rgba(200,35,96,0.35))',
             }}
@@ -180,8 +180,8 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
             title="¡Toca para celebrar nuestro amor! 🎉"
           >
             <span
-              className="text-4xl sm:text-5xl md:text-6xl text-rose-500"
-              style={{ filter: 'drop-shadow(0 0 16px rgba(240,64,128,0.8))' }}
+              className="text-5xl sm:text-6xl md:text-7xl"
+              style={{ color: '#FF8FA3', filter: 'drop-shadow(0 0 24px rgba(255,143,163,0.9))' }}
             >
               ♥
             </span>
@@ -190,7 +190,7 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
           <motion.span
             className="font-display text-5xl sm:text-7xl md:text-8xl font-black tracking-tight"
             style={{
-              background: 'linear-gradient(135deg, #ffffff 10%, #f0c0ff 60%, #9060ff 100%)',
+              background: 'linear-gradient(145deg, #fff8f0 0%, #e8d4ff 40%, #c0a0ff 70%, #8B5CF6 100%)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               filter: 'drop-shadow(0 4px 20px rgba(144,96,255,0.35))',
             }}
@@ -209,10 +209,13 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
         {/* Live Love Stopwatch */}
         <motion.div
           {...fadeUp(0.2)}
-          className="mb-10 w-full max-w-2xl px-5 py-5 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-2xl"
-          style={{ background: 'linear-gradient(135deg, rgba(30, 20, 45, 0.75), rgba(15, 10, 25, 0.85))' }}
+          className="mb-10 w-full max-w-2xl px-5 py-5 rounded-3xl border shadow-2xl backdrop-blur-2xl"
+          style={{
+            background: 'linear-gradient(145deg, rgba(28, 18, 48, 0.85), rgba(16, 8, 30, 0.92))',
+            borderColor: 'rgba(201,169,110,0.15)',
+          }}
         >
-          <div className="flex items-center justify-center gap-2 mb-3 text-xs sm:text-sm font-semibold tracking-widest uppercase text-rose-300">
+          <div className="flex items-center justify-center gap-2 mb-3 text-xs sm:text-sm font-semibold tracking-widest uppercase" style={{ color: 'rgba(201,169,110,0.9)' }}>
             <Clock size={16} className="text-rose-400 animate-pulse" />
             <span>Tiempo exacto de novios (desde el 28/02/2020)</span>
           </div>
@@ -311,8 +314,8 @@ export default function HeroSection({ analytics, onOpenWrapped }) {
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <span className="text-xs text-white/60 tracking-widest uppercase font-semibold">Desliza para ver más</span>
-        <div className="w-0.5 h-10 rounded-full" style={{ background: 'linear-gradient(180deg, #c82360, transparent)' }} />
+        <span className="text-xs text-white/50 tracking-widest uppercase font-semibold">Desliza para ver más</span>
+        <div className="w-0.5 h-10 rounded-full" style={{ background: 'linear-gradient(180deg, rgba(201,169,110,0.7), transparent)' }} />
       </motion.div>
     </section>
   );

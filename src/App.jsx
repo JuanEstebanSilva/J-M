@@ -106,37 +106,37 @@ function Dashboard({ analytics, onOpenWrapped }) {
             <PhotoTimeline />
           </ErrorBoundary>
 
-          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+          <div className="h-px my-10 opacity-60 shimmer-line rounded-full" />
 
           <ErrorBoundary>
             <DeepAnalyticsSection analytics={analytics} />
           </ErrorBoundary>
 
-          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+          <div className="h-px my-10 opacity-60 shimmer-line rounded-full" />
 
           <ErrorBoundary>
             <AdvancedStats analytics={analytics} />
           </ErrorBoundary>
 
-          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+          <div className="h-px my-10 opacity-60 shimmer-line rounded-full" />
 
           <ErrorBoundary>
             <CoupleStats analytics={analytics} />
           </ErrorBoundary>
 
-          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+          <div className="h-px my-10 opacity-60 shimmer-line rounded-full" />
 
           <ErrorBoundary>
             <ActivityCharts analytics={analytics} />
           </ErrorBoundary>
 
-          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+          <div className="h-px my-10 opacity-60 shimmer-line rounded-full" />
 
           <ErrorBoundary>
             <VocabularySection analytics={analytics} />
           </ErrorBoundary>
 
-          <div className="h-1 my-8 opacity-40 shimmer-line rounded-full" />
+          <div className="h-px my-10 opacity-60 shimmer-line rounded-full" />
 
           <ErrorBoundary>
             <MemoriesSection analytics={analytics} />
@@ -156,10 +156,10 @@ function Dashboard({ analytics, onOpenWrapped }) {
           <h3 className="font-display text-2xl sm:text-3xl font-bold gradient-text mb-2">
             {p1} &amp; {p2}
           </h3>
-          <p className="font-display text-lg italic text-rose-300/90 max-w-md mx-auto">
+          <p className="font-romantic text-xl md:text-2xl italic text-rose-300/90 max-w-md mx-auto" style={{ fontFamily: "'Dancing Script', cursive", fontSize: '1.3rem' }}>
             "Nuestra historia, escrita con amor en cada mensaje, siempre."
           </p>
-          <p className="text-sm text-white/50 mt-4 font-mono">
+          <p className="text-sm text-white/45 mt-4 font-mono">
             {analytics.totalMessages?.toLocaleString('es-CO')} mensajes en este chat · {analytics.daysTogetherAnniversary || 2402} días de novios (desde el 28/02/2020) · Para toda la vida ♾️
           </p>
         </footer>
@@ -188,7 +188,7 @@ export default function App() {
   if (error) return <ErrorScreen message={error} />;
 
   return (
-    <div style={{ background: '#08080d', minHeight: '100vh' }}>
+    <div style={{ background: '#070510', minHeight: '100vh' }}>
       <AnimatePresence mode="wait">
         {showWelcome && (
           <WelcomeScreen key="welcome" onDone={handleWelcomeDone} />
